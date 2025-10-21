@@ -1,0 +1,173 @@
+// src/pages/MyReservations.jsx
+import React, { useState, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { loginWithReservation, clearError } from '../store/slices/authSlice'
+import { fetchUserReservations } from '../store/slices/reservationsSlice'
+
+export default function MyReservations() {
+  const dispatch = useDispatch()
+  const { isAuthenticated, user, isLoading: authLoading, error: authError } = useSelector((state) => state.auth)
+  const { reservations, isLoading: reservationsLoading } = useSelector((state) => state.reservations)
+  
+  const [loginForm, setLoginForm] = useState({
+    name: '',
+    surname: '',
+    reservationId: ''
+  })
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchUserReservations())
+    }
+  }, [isAuthenticated, dispatch])
+
+  const handleLoginSubmit = (e) => {
+    e.preventDefault()
+    dispatch(clearError())
+    dispatch(loginWithReservation(loginForm))
+  }
+
+  const handleInputChange = (e) => {
+    setLoginForm({
+      ...loginForm,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container-max py-12">
+        <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-soft">
+          <h1 className="section-title text-center mb-6">Accéder à mes réservations</h1>
+          
+          {authError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              {authError}
+            </div>
+          )}
+
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Nom *</label>
+              <input
+                type="text"
+                name="name"
+                value={loginForm.name}
+                onChange={handleInputChange}
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gh-red"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Prénom *</label>
+              <input
+                type="text"
+                name="surname"
+                value={loginForm.surname}
+                onChange={handleInputChange}
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gh-red"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">ID de réservation *</label>
+              <input
+                type="text"
+                name="reservationId"
+                value={loginForm.reservationId}
+                onChange={handleInputChange}
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gh-red"
+                placeholder="Ex: 507f1f77bcf86cd799439011"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full bg-gh-red text-white py-2 px-4 rounded-full hover:bg-gh-red-dark transition-colors disabled:opacity-50"
+            >
+              {authLoading ? 'Connexion...' : 'Accéder à mes réservations'}
+            </button>
+          </form>
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <strong>Première visite ?</strong><br />
+              Votre compte est créé automatiquement lors de votre première réservation. 
+              Utilisez le nom, prénom et l'ID de réservation reçu par email.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container-max py-12">
+      <h1 className="section-title mb-8">Mes Réservations</h1>
+      
+      {reservationsLoading ? (
+        <div className="text-center">Chargement de vos réservations...</div>
+      ) : reservations.length === 0 ? (
+        <div className="text-center text-gray-500">
+          <p className="text-lg mb-4">Vous n'avez aucune réservation.</p>
+          <a href="/rooms" className="text-gh-red hover:underline">
+            Découvrir nos chambres
+          </a>
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {reservations.map((reservation) => (
+            <div key={reservation._id} className="bg-white p-6 rounded-lg shadow-soft border">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{reservation.chambre?.name}</h3>
+                  <p className="text-gray-600">#{reservation._id}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                  reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  reservation.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                  'bg-blue-100 text-blue-800'
+                }`}>
+                  {reservation.status === 'confirmed' ? 'Confirmée' :
+                   reservation.status === 'pending' ? 'En attente' :
+                   reservation.status === 'cancelled' ? 'Annulée' : 'Terminée'}
+                </span>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-gray-500">Arrivée</p>
+                  <p className="font-medium">{new Date(reservation.checkIn).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Départ</p>
+                  <p className="font-medium">{new Date(reservation.checkOut).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Total</p>
+                  <p className="font-medium text-gh-red">{reservation.totalAmount} €</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  {reservation.guests} personne(s) • {reservation.nights} nuit(s)
+                </div>
+                {reservation.status === 'pending' && (
+                  <button className="text-red-600 text-sm hover:underline">
+                    Annuler la réservation
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
