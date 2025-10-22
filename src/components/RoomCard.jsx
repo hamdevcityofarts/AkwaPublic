@@ -1,43 +1,138 @@
-// src/components/RoomCard.jsx (MODIFIÉ)
-import React from "react";
-import { Link } from "react-router-dom";
+// src/components/RoomCard.jsx (Frontend Public)
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Users, Euro, MapPin, Bed } from 'lucide-react'
 
-export default function RoomCard({ room }) {
+const RoomCard = ({ room }) => {
+  // Récupérer l'image principale ou la première image
   const primaryImage = room.images?.find(img => img.isPrimary) || room.images?.[0]
   
+  // Image par défaut si aucune image n'existe
+  const defaultImage = 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&h=600&fit=crop&auto=format'
+  
+  const displayImage = primaryImage?.url || defaultImage
+
+  const getTypeLabel = (type) => {
+    const typeLabels = {
+      'standard': 'Standard',
+      'superior': 'Supérieure',
+      'deluxe': 'Deluxe',
+      'suite': 'Suite',
+      'family': 'Familiale',
+      'executive': 'Exécutive',
+      'presidential': 'Présidentielle'
+    }
+    return typeLabels[type] || type
+  }
+
   return (
-    <article className="bg-white rounded-lg shadow-soft overflow-hidden">
-      <img 
-        className="card-img" 
-        src={primaryImage?.url || '/default-room.jpg'} 
-        alt={primaryImage?.alt || room.name} 
-      />
-      <div className="p-4">
-        <h3 className="text-lg font-medium mb-1">{room.name}</h3>
-        <p className="text-sm text-gray-600 mb-3">{room.type} • {room.category}</p>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-gh-red font-semibold">{room.price}€ / nuit</div>
-            <div className="text-xs text-gray-500">
-              Capacité: {room.capacity} personne(s)
-            </div>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Image de la chambre */}
+      <Link to={`/rooms/${room._id}`} className="block relative h-56 overflow-hidden">
+        <img
+          src={displayImage}
+          alt={primaryImage?.alt || room.name}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+          onError={(e) => {
+            e.target.src = defaultImage
+          }}
+        />
+        
+        {/* Badge nombre d'images */}
+        {room.images && room.images.length > 1 && (
+          <div className="absolute top-3 right-3 bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+            {room.images.length} photos
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <Link
-              to={`/rooms/${room._id}`}
-              className="text-sm px-3 py-2 rounded-full border border-gray-200"
-            >
-              Détails
-            </Link>
-            <Link
-              to={`/booking?room=${room._id}`}
-              className="text-sm px-3 py-2 rounded-full text-white btn-gradient"
-            >
-              Réserver
-            </Link>
+        )}
+
+        {/* Badge type de chambre */}
+        <div className="absolute bottom-3 left-3">
+          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+            {getTypeLabel(room.type)}
+          </span>
+        </div>
+      </Link>
+      
+      <div className="p-5">
+        {/* Titre et prix */}
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900 mb-1">{room.name}</h3>
+            <p className="text-sm text-gray-500">#{room.number}</p>
+          </div>
+          <div className="text-right ml-3">
+            <div className="flex items-center text-2xl font-bold text-blue-600">
+              <Euro className="w-5 h-5 mr-1" />
+              {room.price}
+            </div>
+            <span className="text-xs text-gray-500">par nuit</span>
           </div>
         </div>
+
+        {/* Informations */}
+        <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+          <div className="flex items-center gap-1">
+            <Users className="w-4 h-4" />
+            <span>{room.capacity} pers.</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Bed className="w-4 h-4" />
+            <span className="capitalize">{room.bedType?.replace('_', ' ')}</span>
+          </div>
+          {room.size && (
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span>{room.size}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        {room.description && (
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+            {room.description}
+          </p>
+        )}
+
+        {/* Équipements */}
+        {room.amenities && room.amenities.length > 0 && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-2">
+              {room.amenities.slice(0, 3).map((amenity, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                >
+                  {amenity}
+                </span>
+              ))}
+              {room.amenities.length > 3 && (
+                <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
+                  +{room.amenities.length - 3}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Boutons d'action */}
+        <div className="flex gap-2">
+          <Link
+            to={`/rooms/${room._id}`}
+            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-center text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            Voir détails
+          </Link>
+          <Link
+            to={`/booking?room=${room._id}`}
+            className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-center text-sm font-medium hover:bg-gray-200 transition-colors"
+          >
+            Réserver
+          </Link>
+        </div>
       </div>
-    </article>
-  );
+    </div>
+  )
 }
+
+export default RoomCard

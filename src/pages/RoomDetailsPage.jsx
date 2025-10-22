@@ -1,8 +1,10 @@
-// src/pages/RoomDetailsPage.jsx (MODIFIÉ)
+// src/pages/RoomDetailsPage.jsx (Frontend Public)
 import React, { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchRoomById, clearCurrentRoom } from '../store/slices/roomsSlice'
+import { Users, Bed, Ruler, Euro, ArrowLeft } from 'lucide-react'
+import ImageSlider from '../components/ImageSlider'
 
 export default function RoomDetailsPage() {
   const { id } = useParams()
@@ -19,80 +21,158 @@ export default function RoomDetailsPage() {
   }, [id, dispatch])
 
   if (isLoading) {
-    return <div className="container-max py-12 text-center">Chargement...</div>
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    )
   }
 
   if (error || !room) {
-    return <div className="container-max py-12 text-center text-red-600">Chambre non trouvée</div>
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Chambre non trouvée</h2>
+          <Link
+            to="/rooms"
+            className="inline-flex items-center text-blue-600 hover:text-blue-700"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Retour aux chambres
+          </Link>
+        </div>
+      </div>
+    )
   }
 
-  const primaryImage = room.images?.find(img => img.isPrimary) || room.images?.[0]
-  const otherImages = room.images?.filter(img => !img.isPrimary) || []
+  const getTypeLabel = (type) => {
+    const typeLabels = {
+      'standard': 'Standard',
+      'superior': 'Supérieure',
+      'deluxe': 'Deluxe',
+      'suite': 'Suite',
+      'family': 'Familiale',
+      'executive': 'Exécutive',
+      'presidential': 'Présidentielle'
+    }
+    return typeLabels[type] || type
+  }
 
   return (
-    <div className="container-max py-12">
+    <div className="container mx-auto px-4 py-12">
+      {/* Bouton retour */}
+      <Link
+        to="/rooms"
+        className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Retour aux chambres
+      </Link>
+
       <div className="grid lg:grid-cols-2 gap-8">
+        {/* Slider d'images */}
         <div>
-          <div className="rounded-lg overflow-hidden shadow-soft">
-            <img
-              src={primaryImage?.url || '/default-room.jpg'}
-              alt={primaryImage?.alt || room.name}
-              className="w-full h-96 object-cover"
-            />
+          <div className="rounded-lg overflow-hidden shadow-lg">
+            <ImageSlider images={room.images} className="h-96" />
           </div>
-          {otherImages.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {otherImages.map((image, idx) => (
-                <img
-                  key={idx}
-                  src={image.url}
-                  className="w-full h-28 object-cover rounded"
-                  alt={image.alt || `Vue ${idx + 1} de ${room.name}`}
-                />
-              ))}
-            </div>
-          )}
         </div>
-        <div className="p-6">
-          <h2 className="text-2xl font-serif mb-2">{room.name}</h2>
-          <div className="text-gh-red font-semibold text-xl mb-3">
-            {room.price}€ / nuit
-          </div>
-          <p className="text-gray-700 mb-4">{room.description}</p>
 
-          <div className="glass p-4 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2">Caractéristiques</h4>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Type: {room.type}</li>
-              <li>• Catégorie: {room.category}</li>
-              <li>• Capacité: {room.capacity} personne(s)</li>
-              <li>• Lit: {room.bedType}</li>
-              {room.size && <li>• Surface: {room.size}</li>}
-            </ul>
+        {/* Informations de la chambre */}
+        <div>
+          <div className="mb-4">
+            <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+              {getTypeLabel(room.type)}
+            </span>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{room.name}</h1>
+            <p className="text-gray-500">Chambre #{room.number}</p>
           </div>
 
+          {/* Prix */}
+          <div className="bg-blue-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">À partir de</p>
+                <div className="flex items-center text-3xl font-bold text-blue-600">
+                  <Euro className="w-6 h-6 mr-1" />
+                  {room.price}
+                  <span className="text-lg font-normal text-gray-600 ml-2">/ nuit</span>
+                </div>
+              </div>
+              <Link
+                to={`/booking?room=${room._id}`}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Réserver
+              </Link>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">Description</h2>
+            <p className="text-gray-700 leading-relaxed">{room.description}</p>
+          </div>
+
+          {/* Caractéristiques */}
+          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Caractéristiques</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Capacité</p>
+                  <p className="font-medium">{room.capacity} personnes</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Bed className="w-5 h-5 text-gray-500" />
+                <div>
+                  <p className="text-sm text-gray-500">Type de lit</p>
+                  <p className="font-medium capitalize">{room.bedType?.replace('_', ' ')}</p>
+                </div>
+              </div>
+
+              {room.size && (
+                <div className="flex items-center gap-2">
+                  <Ruler className="w-5 h-5 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Surface</p>
+                    <p className="font-medium">{room.size}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 text-gray-500">🏷️</div>
+                <div>
+                  <p className="text-sm text-gray-500">Catégorie</p>
+                  <p className="font-medium capitalize">{room.category}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Équipements */}
           {room.amenities && room.amenities.length > 0 && (
-            <div className="glass p-4 rounded-lg mb-4">
-              <h4 className="font-semibold mb-2">Équipements</h4>
-              <ul className="text-sm text-gray-700">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3">Équipements & Services</h3>
+              <div className="grid grid-cols-2 gap-2">
                 {room.amenities.map((amenity, index) => (
-                  <li key={index}>• {amenity}</li>
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                  >
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm text-gray-700">{amenity}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
-
-          <div className="flex gap-3">
-            <Link
-              to={`/booking?room=${room._id}`}
-              className="px-5 py-2 rounded-full text-white btn-gradient"
-            >
-              Réserver
-            </Link>
-            <button className="px-5 py-2 rounded-full border">
-              Demander un devis
-            </button>
-          </div>
         </div>
       </div>
     </div>
