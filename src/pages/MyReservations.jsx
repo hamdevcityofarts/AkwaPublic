@@ -21,6 +21,12 @@ export default function MyReservations() {
     }
   }, [isAuthenticated, dispatch])
 
+  // Fonction de conversion Euro vers F CFA
+  const convertToCFA = (priceInEuro) => {
+    const exchangeRate = 655.957;
+    return Math.round(priceInEuro * exchangeRate).toLocaleString('fr-FR');
+  }
+
   const handleLoginSubmit = (e) => {
     e.preventDefault()
     dispatch(clearError())
@@ -32,6 +38,31 @@ export default function MyReservations() {
       ...loginForm,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleCancelReservation = async (reservationId) => {
+    if (window.confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/api/reservations/${reservationId}/cancel`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          alert('Réservation annulée avec succès');
+          dispatch(fetchUserReservations()); // Recharger les réservations
+        } else {
+          alert('Erreur lors de l\'annulation');
+        }
+      } catch (error) {
+        console.error('Erreur annulation:', error);
+        alert('Erreur lors de l\'annulation');
+      }
+    }
   }
 
   if (!isAuthenticated) {
@@ -107,14 +138,22 @@ export default function MyReservations() {
 
   return (
     <div className="container-max py-12">
-      <h1 className="section-title mb-8">Mes Réservations</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="section-title">Mes Réservations</h1>
+        <div className="text-sm text-gray-600">
+          Connecté en tant que: <span className="font-semibold">{user?.name} {user?.surname}</span>
+        </div>
+      </div>
       
       {reservationsLoading ? (
-        <div className="text-center">Chargement de vos réservations...</div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de vos réservations...</p>
+        </div>
       ) : reservations.length === 0 ? (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-gray-500 py-12">
           <p className="text-lg mb-4">Vous n'avez aucune réservation.</p>
-          <a href="/rooms" className="text-gh-red hover:underline">
+          <a href="/rooms" className="text-gh-red hover:underline font-semibold">
             Découvrir nos chambres
           </a>
         </div>
@@ -150,7 +189,8 @@ export default function MyReservations() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Total</p>
-                  <p className="font-medium text-gh-red">{reservation.totalAmount} €</p>
+                  <p className="font-medium text-gh-red">{convertToCFA(reservation.totalAmount)} FCFA</p>
+                  <p className="text-xs text-gray-500">{reservation.totalAmount} €</p>
                 </div>
               </div>
               
@@ -159,8 +199,16 @@ export default function MyReservations() {
                   {reservation.guests} personne(s) • {reservation.nights} nuit(s)
                 </div>
                 {reservation.status === 'pending' && (
-                  <button className="text-red-600 text-sm hover:underline">
+                  <button 
+                    onClick={() => handleCancelReservation(reservation._id)}
+                    className="text-red-600 text-sm hover:underline font-medium"
+                  >
                     Annuler la réservation
+                  </button>
+                )}
+                {reservation.status === 'confirmed' && (
+                  <button className="text-blue-600 text-sm hover:underline font-medium">
+                    Voir les détails
                   </button>
                 )}
               </div>

@@ -11,7 +11,7 @@ import Booking from './pages/Booking'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import MyReservations from './pages/MyReservations'
-import { autoRegisterWithReservation } from './store/slices/authSlice'
+// SUPPRIMER l'import de PaymentSuccess car vous n'en avez pas besoin
 
 export default function App() {
   const dispatch = useDispatch()
@@ -28,6 +28,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/my-reservations" element={<MyReservations />} />
+          {/* SUPPRIMER la route /payment-succes car elle n'est pas utilisée */}
         </Routes>
       </main>
       <Footer />

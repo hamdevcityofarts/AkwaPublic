@@ -1,17 +1,10 @@
-// src/components/RoomCard.jsx (Frontend Public)
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Users, Euro, MapPin, Bed } from 'lucide-react'
+import { Users, MapPin, Bed } from 'lucide-react'
+import ImageSlider from './ImageSlider'
+import roomsService from '../services/roomsService'
 
 const RoomCard = ({ room }) => {
-  // Récupérer l'image principale ou la première image
-  const primaryImage = room.images?.find(img => img.isPrimary) || room.images?.[0]
-  
-  // Image par défaut si aucune image n'existe
-  const defaultImage = 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&h=600&fit=crop&auto=format'
-  
-  const displayImage = primaryImage?.url || defaultImage
-
   const getTypeLabel = (type) => {
     const typeLabels = {
       'standard': 'Standard',
@@ -25,33 +18,31 @@ const RoomCard = ({ room }) => {
     return typeLabels[type] || type
   }
 
+  // ✅ FORMATER LE PRIX EN XAF
+  const formatPrice = (price) => {
+    return roomsService.formatPrice(price);
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-      {/* Image de la chambre */}
-      <Link to={`/rooms/${room._id}`} className="block relative h-56 overflow-hidden">
-        <img
-          src={displayImage}
-          alt={primaryImage?.alt || room.name}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-          onError={(e) => {
-            e.target.src = defaultImage
-          }}
-        />
+      {/* ✅ SLIDER D'IMAGES */}
+      <div className="relative h-56">
+        <ImageSlider images={room.images} className="h-full" />
         
-        {/* Badge nombre d'images */}
-        {room.images && room.images.length > 1 && (
-          <div className="absolute top-3 right-3 bg-black/60 text-white px-2 py-1 rounded-full text-xs">
-            {room.images.length} photos
-          </div>
-        )}
-
-        {/* Badge type de chambre */}
-        <div className="absolute bottom-3 left-3">
-          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+        {/* Badge type de chambre par-dessus le slider */}
+        <div className="absolute bottom-3 left-3 z-10">
+          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
             {getTypeLabel(room.type)}
           </span>
         </div>
-      </Link>
+
+        {/* Badge nombre d'images */}
+        {room.images && room.images.length > 1 && (
+          <div className="absolute top-3 right-3 z-10 bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+            {room.images.length} photos
+          </div>
+        )}
+      </div>
       
       <div className="p-5">
         {/* Titre et prix */}
@@ -61,9 +52,9 @@ const RoomCard = ({ room }) => {
             <p className="text-sm text-gray-500">#{room.number}</p>
           </div>
           <div className="text-right ml-3">
-            <div className="flex items-center text-2xl font-bold text-blue-600">
-              <Euro className="w-5 h-5 mr-1" />
-              {room.price}
+            {/* ✅ PRIX EN XAF */}
+            <div className="text-2xl font-bold text-blue-600">
+              {formatPrice(room.price)}
             </div>
             <span className="text-xs text-gray-500">par nuit</span>
           </div>

@@ -1,4 +1,3 @@
-// src/services/roomsService.js
 import api from './api'
 
 const roomsService = {
@@ -16,6 +15,19 @@ const roomsService = {
       checkIn,
       checkOut
     })
+  },
+
+  // ✅ FORMATER LE PRIX EN XAF
+  formatPrice: (price) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XAF'
+    }).format(price);
+  },
+
+  // ✅ AFFICHER LE SYMBOLE XAF
+  getCurrencySymbol: () => {
+    return 'FCFA';
   }
 }
 

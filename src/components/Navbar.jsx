@@ -30,7 +30,7 @@ export default function Navbar() {
               isActive ? "text-gh-red font-medium" : "text-gray-700"
             }
           >
-            Chambres
+            Chambres/Suites
           </NavLink>
           <NavLink
             to="/about"
