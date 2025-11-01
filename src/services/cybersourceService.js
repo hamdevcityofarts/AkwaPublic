@@ -2,10 +2,10 @@ const axios = require('axios');
 
 class CybersourceService {
   constructor() {
-    this.merchantId = process.env.CYBERSOURCE_MERCHANT_ID;
-    this.apiKey = process.env.CYBERSOURCE_API_KEY;
-    this.apiSecret = process.env.CYBERSOURCE_API_SECRET;
-    this.baseURL = process.env.NODE_ENV === 'production' 
+    this.merchantId = import.meta.env.CYBERSOURCE_MERCHANT_ID;
+    this.apiKey = import.meta.env.CYBERSOURCE_API_KEY;
+    this.apiSecret = import.meta.env.CYBERSOURCE_API_SECRET;
+    this.baseURL = import.meta.env.NODE_ENV === 'production' 
       ? 'https://api.cybersource.com' 
       : 'https://apitest.cybersource.com';
   }
@@ -15,7 +15,7 @@ class CybersourceService {
    */
   async processPayment(paymentData) {
     // Simulation si pas configuré ou en développement
-    if (!this.merchantId || this.merchantId === 'votre_merchant_id_test' || process.env.NODE_ENV === 'development') {
+    if (!this.merchantId || this.merchantId === 'votre_merchant_id_test' || import.meta.env.NODE_ENV === 'development') {
       return this.simulatePayment(paymentData);
     }
 
@@ -189,7 +189,7 @@ class CybersourceService {
    * 🔹 TRAITER UN REMBOURSEMENT - CORRIGÉ
    */
   async processRefund(originalTransactionId, amount, currency = 'XAF') {
-    if (!this.merchantId || this.merchantId === 'votre_merchant_id_test' || process.env.NODE_ENV === 'development') {
+    if (!this.merchantId || this.merchantId === 'votre_merchant_id_test' || import.meta.env.NODE_ENV === 'development') {
       return this.simulateRefund(originalTransactionId, amount, currency);
     }
 

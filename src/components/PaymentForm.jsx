@@ -180,7 +180,7 @@ const PaymentForm = ({ reservation, onSuccess, onError }) => {
         currency: 'XAF'
       };
 
-      let endpoint = process.env.API_BASE_URL + '/payments/process';
+      let endpoint = import.meta.env.VITE_API_BASE_URL + '/payments/process';
       let headers = {
         'Content-Type': 'application/json'
       };
@@ -191,7 +191,7 @@ const PaymentForm = ({ reservation, onSuccess, onError }) => {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
         // Visiteur public
-        endpoint = process.env.API_BASE_URL + '/payments/process/public';
+        endpoint = import.meta.env.VITE_API_BASE_URL + '/payments/process/public';
         paymentData.clientInfo = {
           name: reservation.clientInfo?.name || 'Client',
           surname: reservation.clientInfo?.surname || 'Public',
