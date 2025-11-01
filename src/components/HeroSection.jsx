@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import img0 from "./ghimage.jpeg"
-import img1 from "./ghImages.jpg"
-import img2 from "./ghImg.jpg"
+import img1 from "./ghImages.JPG"
+import img2 from "./ghImg.JPG"
 
 // ✅ CORRECTION : Retirer les accolades autour des images
 const slides = [
