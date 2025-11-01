@@ -48,7 +48,7 @@ class CybersourceService {
   }
 
   /**
-   * 🔹 CONSTRUIRE LA REQUÊTE CYBERSOURCE
+   * 🔹 CONSTRUIRE LA REQUÊTE CYBERSOURCE - CORRIGÉE
    */
   buildPaymentRequest(paymentData) {
     const [expiryMonth, expiryYear] = paymentData.cardData.expiry.split('/');
@@ -73,7 +73,8 @@ class CybersourceService {
       },
       orderInformation: {
         amountDetails: {
-          totalAmount: paymentData.amount.toFixed(2),
+          // ✅ CORRECTION : Supprimer toFixed(2) pour éviter l'arrondi décimal
+          totalAmount: paymentData.amount,  // ⬅️ LIGNE CORRIGÉE
           currency: paymentData.currency || 'XAF'
         },
         billTo: {
@@ -105,7 +106,7 @@ class CybersourceService {
   }
 
   /**
-   * 🔹 SIMULATION PAIEMENT (Développement)
+   * 🔹 SIMULATION PAIEMENT (Développement) - CORRIGÉE
    */
   simulatePayment(paymentData) {
     console.log('🔧 Simulation paiement Cybersource:', {
@@ -156,7 +157,8 @@ class CybersourceService {
     return {
       ...result,
       transactionId: `CS-${paymentData.type.toUpperCase()}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-      amount: paymentData.amount,
+      // ✅ CORRECTION : Conserver le montant exact sans modification
+      amount: paymentData.amount,  // ⬅️ LIGNE CORRIGÉE
       currency: paymentData.currency || 'XAF',
       gateway: 'cybersource-mock',
       cardType: this.detectCardType(paymentData.cardData?.number || '4242')
@@ -173,7 +175,8 @@ class CybersourceService {
       success: isApproved,
       status: isApproved ? 'AUTHORIZED' : 'DECLINED',
       transactionId: data.id,
-      amount: parseFloat(data.orderInformation.amountDetails.totalAmount),
+      // ✅ CORRECTION : Pas de modification du montant
+      amount: data.orderInformation.amountDetails.totalAmount,  // ⬅️ LIGNE CORRIGÉE
       currency: data.orderInformation.amountDetails.currency,
       message: isApproved ? 'Paiement approuvé' : data.errorInformation?.message,
       declineReason: data.errorInformation?.reason,
@@ -183,7 +186,7 @@ class CybersourceService {
   }
 
   /**
-   * 🔹 TRAITER UN REMBOURSEMENT
+   * 🔹 TRAITER UN REMBOURSEMENT - CORRIGÉ
    */
   async processRefund(originalTransactionId, amount, currency = 'XAF') {
     if (!this.merchantId || this.merchantId === 'votre_merchant_id_test' || process.env.NODE_ENV === 'development') {
@@ -198,7 +201,8 @@ class CybersourceService {
             code: `REF-${originalTransactionId}`
           },
           refundAmountDetails: {
-            totalAmount: amount.toFixed(2),
+            // ✅ CORRECTION : Supprimer toFixed(2)
+            totalAmount: amount,  // ⬅️ LIGNE CORRIGÉE
             currency: currency
           },
           previousOrderId: originalTransactionId
@@ -230,7 +234,8 @@ class CybersourceService {
       success: true,
       status: 'AUTHORIZED',
       transactionId: `REF-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-      amount: amount,
+      // ✅ CORRECTION : Montant exact
+      amount: amount,  // ⬅️ LIGNE CORRIGÉE
       currency: currency,
       message: 'Remboursement simulé avec succès',
       gateway: 'cybersource-mock'

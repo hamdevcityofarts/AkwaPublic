@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import PaymentForm from '../components/PaymentForm';
-import { Calendar, Users, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import PaymentForm from '../components/SecurePaymentForm';
+import { Calendar, Users, AlertCircle, CheckCircle, Loader, CreditCard } from 'lucide-react';
 import roomsService from '../services/roomsService';
 import reservationsService from '../services/reservationsService';
 
@@ -17,6 +17,11 @@ export default function Booking() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [reservation, setReservation] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
+
+  // ✅ NOUVEAU: État pour la sélection du paiement
+  const [paymentOption, setPaymentOption] = useState('full'); // 'first-night', 'partial', 'full'
+  const [partialNights, setPartialNights] = useState(1);
 
   // Formulaire
   const [form, setForm] = useState({
@@ -76,6 +81,25 @@ export default function Booking() {
     }
   };
 
+  // ✅ NOUVEAU: Gestion du changement d'option de paiement
+  const handlePaymentOptionChange = (option) => {
+    setPaymentOption(option);
+    // Réinitialiser le nombre de nuits partielles à 1 si on change d'option
+    if (option !== 'partial') {
+      setPartialNights(1);
+    }
+  };
+
+  // ✅ NOUVEAU: Gestion du changement du nombre de nuits partielles
+  const handlePartialNightsChange = (e) => {
+    const nights = parseInt(e.target.value);
+    const totalNights = calculateNights();
+    
+    if (nights >= 1 && nights <= totalNights) {
+      setPartialNights(nights);
+    }
+  };
+
   // Calculer le nombre de nuits
   const calculateNights = () => {
     if (form.checkin && form.checkout) {
@@ -88,10 +112,86 @@ export default function Booking() {
     return 0;
   };
 
-  // Calculer le montant total
-  const calculateTotal = () => {
+  // ✅ NOUVEAU: Calculer le montant selon l'option choisie
+  const calculateAmountToPay = () => {
     if (!selectedRoom) return 0;
-    return selectedRoom.price * calculateNights();
+    
+    const totalNights = calculateNights();
+    const pricePerNight = selectedRoom.price;
+
+    switch (paymentOption) {
+      case 'first-night':
+        return pricePerNight; // Payer seulement la première nuit
+      
+      case 'partial':
+        // Payer un nombre partiel de nuits (entre 1 et totalNights)
+        const nightsToPay = Math.min(partialNights, totalNights);
+        return pricePerNight * nightsToPay;
+      
+      case 'full':
+      default:
+        // Payer la totalité (comportement actuel)
+        return pricePerNight * totalNights;
+    }
+  };
+
+  // ✅ NOUVEAU: Obtenir le nombre de nuits à payer
+  const getNightsToPay = () => {
+    const totalNights = calculateNights();
+    
+    switch (paymentOption) {
+      case 'first-night':
+        return 1;
+      
+      case 'partial':
+        return Math.min(partialNights, totalNights);
+      
+      case 'full':
+      default:
+        return totalNights;
+    }
+  };
+
+  // ✅ NOUVEAU: Obtenir la description de l'option de paiement
+  const getPaymentOptionDescription = () => {
+    const nightsToPay = getNightsToPay();
+    const totalNights = calculateNights();
+    
+    switch (paymentOption) {
+      case 'first-night':
+        return `Première nuit (sur ${totalNights} nuits totales)`;
+      
+      case 'partial':
+        return `${nightsToPay} nuit${nightsToPay > 1 ? 's' : ''} (sur ${totalNights} nuits totales)`;
+      
+      case 'full':
+        return `Totalité (${totalNights} nuit${totalNights > 1 ? 's' : ''})`;
+      
+      default:
+        return '';
+    }
+  };
+
+  // ✅ FONCTION POUR REDIRIGER VERS CYBERSOURCE
+  const redirectToCyberSource = (paymentData) => {
+    console.log('🚀 Redirection vers CyberSource...', paymentData);
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = paymentData.form_action;
+    form.style.display = 'none';
+    
+    Object.keys(paymentData.form_data).forEach(key => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = paymentData.form_data[key];
+      form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    console.log('📤 Soumission du formulaire CyberSource...');
+    form.submit();
   };
 
   // Étape 1: Créer la réservation sans authentification
@@ -133,7 +233,7 @@ export default function Booking() {
     try {
       console.log('🔹 Début création réservation publique...');
 
-      // 🔹 CRÉATION DE LA RÉSERVATION SANS AUTHENTIFICATION
+      // ✅ NOUVEAU: Inclure l'option de paiement dans les données
       const reservationData = {
         chambreId: form.roomId,
         checkIn: form.checkin,
@@ -143,8 +243,8 @@ export default function Booking() {
         guests: parseInt(form.adults) + parseInt(form.children),
         specialRequests: form.specialRequests,
         paymentMethod: 'card',
-        totalAmount: calculateTotal(),
-        nights: calculateNights(),
+        paymentOption: paymentOption, // ✅ Nouveau champ
+        nightsToPay: getNightsToPay(), // ✅ Nouveau champ
         clientInfo: {
           name: form.name,
           surname: form.surname,
@@ -155,26 +255,13 @@ export default function Booking() {
 
       console.log('🔹 Données réservation:', reservationData);
 
-      // ESSAYER L'ENDPOINT PUBLIC D'ABORD
-      let reservationResponse = await fetch('http://localhost:5000/api/reservations/public', {
+      const reservationResponse = await fetch('http://localhost:5000/api/reservations/public', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(reservationData)
       });
-
-      // SI L'ENDPOINT PUBLIC N'EXISTE PAS, ESSAYER SANS AUTH
-      if (!reservationResponse.ok) {
-        console.log('🔹 Endpoint public non disponible, tentative sans auth...');
-        reservationResponse = await fetch('http://localhost:5000/api/reservations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(reservationData)
-        });
-      }
 
       const reservationResult = await reservationResponse.json();
 
@@ -184,56 +271,34 @@ export default function Booking() {
         throw new Error(reservationResult.message || 'Erreur lors de la création de la réservation');
       }
 
-      // ✅ Réservation créée avec succès
       console.log('✅ Réservation créée:', reservationResult.reservation);
       setReservation(reservationResult.reservation);
       
-      // Passer à l'étape paiement
-      setStep(2);
-      console.log('✅ Passage à l\'étape 2 (paiement)');
+      if (reservationResult.payment) {
+        console.log('💰 Données de paiement reçues:', reservationResult.payment);
+        setPaymentData(reservationResult.payment);
+        
+        setTimeout(() => {
+          redirectToCyberSource(reservationResult.payment);
+        }, 100);
+        
+      } else {
+        setStep(2);
+        console.log('✅ Passage à l\'étape 2 (paiement local)');
+      }
 
     } catch (err) {
       console.error('❌ Erreur:', err);
-      
-      // Si les endpoints échouent, créer une réservation simulée
-      if (err.message.includes('404') || err.message.includes('Failed to fetch')) {
-        console.log('🔄 Création de réservation simulée...');
-        const mockReservation = {
-          _id: 'RES-' + Date.now(),
-          chambreId: form.roomId,
-          checkIn: form.checkin,
-          checkOut: form.checkout,
-          adults: parseInt(form.adults),
-          children: parseInt(form.children),
-          guests: parseInt(form.adults) + parseInt(form.children),
-          specialRequests: form.specialRequests,
-          totalAmount: calculateTotal(),
-          nights: calculateNights(),
-          status: 'pending',
-          clientInfo: {
-            name: form.name,
-            surname: form.surname,
-            email: form.email,
-            phone: form.phone
-          }
-        };
-        
-        setReservation(mockReservation);
-        setStep(2);
-        console.log('✅ Réservation simulée créée, passage à l\'étape 2');
-      } else {
-        setError(err.message);
-      }
+      setError(err.message || 'Erreur lors de la création de la réservation');
     } finally {
       setLoading(false);
     }
   };
 
-  // Étape 2: Succès du paiement
+  // Étape 2: Paiement manuel (fallback si CyberSource échoue)
   const handlePaymentSuccess = (paymentResult) => {
     console.log('✅ Paiement réussi:', paymentResult);
     setStep(3);
-    console.log('✅ Passage à l\'étape 3 (confirmation)');
   };
 
   // Étape 2: Échec du paiement
@@ -246,6 +311,40 @@ export default function Booking() {
   const handleBackToForm = () => {
     setStep(1);
     setError(null);
+  };
+
+  // ✅ COMPOSANT DE REDIRECTION CYBERSOURCE
+  const CyberSourceRedirect = () => {
+    useEffect(() => {
+      if (paymentData) {
+        console.log('🔄 Redirection automatique vers CyberSource...');
+        redirectToCyberSource(paymentData);
+      }
+    }, [paymentData]);
+
+    return (
+      <div className="container-max py-12">
+        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <CreditCard className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Redirection vers le paiement sécurisé</h1>
+            <p className="text-gray-600 mb-4">
+              Vous allez être redirigé vers la plateforme de paiement sécurisée CyberSource...
+            </p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="text-sm text-gray-500 mt-4">
+              Si la redirection ne se fait pas automatiquement, 
+              <button 
+                onClick={() => redirectToCyberSource(paymentData)}
+                className="text-blue-600 hover:text-blue-700 underline ml-1"
+              >
+                cliquez ici
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // ========== RENDU ÉTAPE 3 : CONFIRMATION ==========
@@ -279,14 +378,17 @@ export default function Booking() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Nuits:</span>
+                <span className="text-gray-600">Nuits totales:</span>
                 <span className="font-medium">{calculateNights()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Option de paiement:</span>
+                <span className="font-medium capitalize">{getPaymentOptionDescription()}</span>
               </div>
               <div className="flex justify-between border-t pt-2 mt-2">
                 <span className="text-gray-600 font-semibold">Montant payé:</span>
-                {/* ✅ MONTANT EN XAF */}
                 <span className="font-bold text-green-600 text-lg">
-                  {formatPrice(calculateTotal())}
+                  {formatPrice(reservation.totalAmount || calculateAmountToPay())}
                 </span>
               </div>
             </div>
@@ -316,7 +418,12 @@ export default function Booking() {
     );
   }
 
-  // ========== RENDU ÉTAPE 2 : PAIEMENT ==========
+  // ========== RENDU REDIRECTION CYBERSOURCE ==========
+  if (paymentData) {
+    return <CyberSourceRedirect />;
+  }
+
+  // ========== RENDU ÉTAPE 2 : PAIEMENT LOCAL (FALLBACK) ==========
   if (step === 2 && reservation) {
     return (
       <div className="container-max py-12">
@@ -340,7 +447,7 @@ export default function Booking() {
           <PaymentForm
             reservation={{
               ...reservation,
-              totalAmount: calculateTotal(),
+              totalAmount: calculateAmountToPay(),
               clientEmail: form.email,
               clientName: `${form.surname} ${form.name}`
             }}
@@ -381,7 +488,6 @@ export default function Booking() {
             <option value="">Sélectionnez une chambre</option>
             {rooms.map(room => (
               <option key={room._id} value={room._id}>
-                {/* ✅ PRIX EN XAF */}
                 {room.name} - {formatPrice(room.price)}/nuit
               </option>
             ))}
@@ -503,6 +609,86 @@ export default function Booking() {
           </div>
         </div>
 
+        {/* ✅ NOUVEAU: Options de paiement */}
+        {calculateNights() > 0 && selectedRoom && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-3">Options de paiement</label>
+            
+            <div className="space-y-3">
+              {/* Option 1: Première nuit seulement */}
+              <label className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="paymentOption"
+                  value="first-night"
+                  checked={paymentOption === 'first-night'}
+                  onChange={() => handlePaymentOptionChange('first-night')}
+                  className="mt-1 text-blue-600 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">Payer la première nuit seulement</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    Sécurisez votre réservation en payant seulement la première nuit ({formatPrice(selectedRoom.price)})
+                  </div>
+                </div>
+              </label>
+
+              {/* Option 2: Nombre partiel de nuits */}
+              <label className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="paymentOption"
+                  value="partial"
+                  checked={paymentOption === 'partial'}
+                  onChange={() => handlePaymentOptionChange('partial')}
+                  className="mt-1 text-blue-600 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">Payer un nombre partiel de nuits</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    Choisissez combien de nuits vous souhaitez payer maintenant
+                  </div>
+                  
+                  {paymentOption === 'partial' && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="text-sm text-gray-700">Nombre de nuits à payer:</span>
+                      <select
+                        value={partialNights}
+                        onChange={handlePartialNightsChange}
+                        className="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {Array.from({ length: calculateNights() }, (_, i) => i + 1).map(night => (
+                          <option key={night} value={night}>
+                            {night} nuit{night > 1 ? 's' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </label>
+
+              {/* Option 3: Totalité (comportement actuel) */}
+              <label className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="paymentOption"
+                  value="full"
+                  checked={paymentOption === 'full'}
+                  onChange={() => handlePaymentOptionChange('full')}
+                  className="mt-1 text-blue-600 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">Payer la totalité du séjour</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    Payez l'intégralité de votre séjour en une seule fois
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Demandes spéciales */}
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Demandes spéciales (optionnel)</label>
@@ -527,17 +713,19 @@ export default function Booking() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-700">Prix par nuit:</span>
-                {/* ✅ PRIX EN XAF */}
                 <span className="font-medium">{formatPrice(selectedRoom.price)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-700">Nombre de nuits:</span>
+                <span className="text-gray-700">Nuits totales:</span>
                 <span className="font-medium">{calculateNights()}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">Option choisie:</span>
+                <span className="font-medium">{getPaymentOptionDescription()}</span>
+              </div>
               <div className="flex justify-between text-lg font-bold border-t border-blue-300 pt-2 mt-2">
-                <span className="text-blue-900">Total:</span>
-                {/* ✅ TOTAL EN XAF */}
-                <span className="text-blue-600">{formatPrice(calculateTotal())}</span>
+                <span className="text-blue-900">Montant à payer:</span>
+                <span className="text-blue-600">{formatPrice(calculateAmountToPay())}</span>
               </div>
             </div>
           </div>
@@ -555,7 +743,7 @@ export default function Booking() {
               Création en cours...
             </>
           ) : (
-            "Continuez vers paiements"
+            `Payer ${formatPrice(calculateAmountToPay())}`
           )}
         </button>
 

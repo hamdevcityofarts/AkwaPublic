@@ -17,7 +17,7 @@ const roomsService = {
     })
   },
 
-  // ✅ FORMATER LE PRIX EN XAF
+  // ✅ FORMATER LE PRIX EN XAF - SANS RÉDUCTION AUTOMATIQUE
   formatPrice: (price) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',

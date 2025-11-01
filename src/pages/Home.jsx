@@ -18,7 +18,7 @@ export default function Home() {
         const response = await roomsService.getRooms();
         
         // Prendre les 3 premières chambres comme "populaires"
-        const popularRooms = response.data.chambres?.slice(0, 3) || [];
+        const popularRooms = response.data.chambres?.slice(0, 9) || [];
         setRooms(popularRooms);
         
       } catch (err) {
@@ -56,17 +56,17 @@ export default function Home() {
               </button>
             </div>
           </div>
-        ) : rooms.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600">Aucune chambre disponible pour le moment.</p>
-          </div>
-        ) : (
-          <div className="grid gap-6 rooms-grid">
-            {rooms.map((room) => (
-              <RoomCard key={room._id} room={room} />
-            ))}
-          </div>
-        )}
+        ) :rooms.length === 0 ? (
+  <div className="text-center py-8">
+    <p className="text-gray-600">Aucune chambre disponible pour le moment.</p>
+  </div>
+) : (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {rooms.map((room) => (
+      <RoomCard key={room._id} room={room} />
+    ))}
+  </div>
+)}
       </section>
 
       <section className="bg-gh-pearl py-12">
