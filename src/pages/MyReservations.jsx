@@ -44,7 +44,7 @@ export default function MyReservations() {
     if (window.confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/reservations/${reservationId}/cancel`, {
+        const response = await fetch(process.env.API_BASE_URL + `/reservations/${reservationId}/cancel`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

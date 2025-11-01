@@ -42,7 +42,7 @@ const SecurePaymentForm = ({ reservation, onSuccess, onError }) => {
       }
 
       // Appel API pour initier le paiement
-      const response = await fetch('http://localhost:5000/api/payments/initiate', {
+      const response = await fetch(process.env.API_BASE_URL + '/payments/initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -53,7 +53,7 @@ const PaymentCallback = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:5000/api/reservations/${resId}`, {
+      const response = await fetch(process.env.API_BASE_URL + `/reservations/${resId}`, {
         headers
       });
 

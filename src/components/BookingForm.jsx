@@ -75,7 +75,7 @@ const BookingForm = ({ room }) => {
 
       console.log('🔹 Création réservation pour chambre:', room._id);
 
-      const response = await fetch('http://localhost:5000/api/reservations', {
+      const response = await fetch(process.env.API_BASE_URL + '/reservations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

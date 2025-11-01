@@ -60,7 +60,7 @@ export default function Booking() {
 
   const loadRooms = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/chambres');
+      const response = await fetch(process.env.API_BASE_URL + '/chambres');
       const data = await response.json();
       if (data.success) {
         setRooms(data.chambres || []);
@@ -255,7 +255,7 @@ export default function Booking() {
 
       console.log('🔹 Données réservation:', reservationData);
 
-      const reservationResponse = await fetch('http://localhost:5000/api/reservations/public', {
+      const reservationResponse = await fetch(process.env.API_BASE_URL + '/reservations/public', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
