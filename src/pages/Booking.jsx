@@ -255,7 +255,7 @@ export default function Booking() {
 
       console.log('🔹 Données réservation:', reservationData);
 
-      const reservationResponse = await fetch(import.meta.env.VITE_API_BASE_URL + '/reservations/public', {
+      const reservationResponse = await fetch(import.meta.env.VITE_API_BASE_URL  + '/reservations/public', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

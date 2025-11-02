@@ -53,7 +53,7 @@ const PaymentCallback = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(import.meta.env.VITE_API_BASE_URL + `/reservations/${resId}`, {
+      const response = await fetch(import.meta.env.VITE_API_BASE_URL  + `/reservations/${resId}`, {
         headers
       });
 

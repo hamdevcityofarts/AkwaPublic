@@ -32,7 +32,7 @@ const PaymentSuccess = () => {
       const token = localStorage.getItem('token');
       
       // Récupérer la réservation
-      const resResponse = await fetch(import.meta.env.VITE_API_BASE_URL + `/reservations/${reservationId}`, {
+      const resResponse = await fetch(import.meta.env.VITE_API_BASE_URL  + `/reservations/${reservationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const resData = await resResponse.json();
@@ -43,7 +43,7 @@ const PaymentSuccess = () => {
 
       // Récupérer le paiement si ID fourni
       if (paymentId) {
-        const payResponse = await fetch(import.meta.env.VITE_API_BASE_URL + `/payments/${paymentId}`, {
+        const payResponse = await fetch(import.meta.env.VITE_API_BASE_URL  + `/payments/${paymentId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const payData = await payResponse.json();
@@ -89,7 +89,7 @@ const PaymentSuccess = () => {
   const handleSendEmail = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_BASE_URL + `/reservations/${reservation._id}/send-confirmation`, {
+      const response = await fetch(import.meta.env.VITE_API_BASE_URL  + `/reservations/${reservation._id}/send-confirmation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { fetchRoomById, clearCurrentRoom } from '../store/slices/roomsSlice'
 import { Users, Bed, Ruler, ArrowLeft } from 'lucide-react'
 import ImageSlider from '../components/ImageSlider'
+import roomsService from '../services/roomsService'
 
 export default function RoomDetailsPage() {
   const { id } = useParams()
@@ -20,10 +21,9 @@ export default function RoomDetailsPage() {
     }
   }, [id, dispatch])
 
-  // Fonction de conversion Euro vers F CFA
-  const convertToCFA = (priceInEuro) => {
-    const exchangeRate = 655.957; // Taux de change fixe FCFA/Euro
-    return Math.round(priceInEuro * exchangeRate).toLocaleString('fr-FR');
+  // ✅ UTILISER LA MÊME FONCTION DE FORMATAGE QUE DANS RoomCard
+  const formatPrice = (price) => {
+    return roomsService.formatPrice(price);
   }
 
   if (isLoading) {
@@ -96,18 +96,17 @@ export default function RoomDetailsPage() {
             <p className="text-gray-500">Chambre #{room.number}</p>
           </div>
 
-          {/* Prix */}
+          {/* Prix - CORRIGÉ */}
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">À partir de</p>
                 <div className="flex items-center text-3xl font-bold text-blue-600">
-                  {convertToCFA(room.price)}
-                  <span className="text-lg font-normal text-gray-600 ml-2">FCFA / nuit</span>
+                  {/* ✅ UTILISER LA MÊME FONCTION DE FORMATAGE */}
+                  {formatPrice(room.price)}
+                  <span className="text-lg font-normal text-gray-600 ml-2">/ nuit</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Soit environ {room.price} €
-                </p>
+                {/* SUPPRIMER LA CONVERSION EN EURO POUR ÉVITER LA CONFUSION */}
               </div>
               <Link
                 to={`/booking?room=${room._id}`}
