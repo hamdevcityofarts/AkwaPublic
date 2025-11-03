@@ -1,14 +1,18 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Users, MapPin, Bed } from 'lucide-react'
+import { useSelector } from 'react-redux'
 import ImageSlider from './ImageSlider'
 import roomsService from '../services/roomsService'
 
 const RoomCard = ({ room }) => {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useSelector((state) => state.auth)
+
   const getTypeLabel = (type) => {
     const typeLabels = {
       'standard': 'Standard',
-      'superior': 'Supérieure',
+      'superior': 'Supérieure', 
       'deluxe': 'Deluxe',
       'suite': 'Suite',
       'family': 'Familiale',
@@ -21,6 +25,24 @@ const RoomCard = ({ room }) => {
   // ✅ FORMATER LE PRIX EN XAF
   const formatPrice = (price) => {
     return roomsService.formatPrice(price);
+  }
+
+  // ✅ GESTION DU CLIC SUR "RÉSERVER"
+  const handleReservationClick = (e) => {
+    e.preventDefault()
+    
+    if (!isAuthenticated) {
+      // Rediriger vers login avec l'URL de retour
+      navigate('/login', { 
+        state: { 
+          from: `/booking?room=${room._id}`,
+          message: 'Connectez-vous ou creez un compte pour réserver cette chambre'
+        }
+      })
+    } else {
+      // Utilisateur connecté → aller directement à la réservation
+      navigate(`/booking?room=${room._id}`)
+    }
   }
 
   return (
@@ -114,12 +136,12 @@ const RoomCard = ({ room }) => {
           >
             Voir détails
           </Link>
-          <Link
-            to={`/booking?room=${room._id}`}
+          <button
+            onClick={handleReservationClick}
             className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-center text-sm font-medium hover:bg-gray-200 transition-colors"
           >
             Réserver
-          </Link>
+          </button>
         </div>
       </div>
     </div>

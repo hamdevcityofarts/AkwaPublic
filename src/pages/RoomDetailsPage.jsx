@@ -1,6 +1,5 @@
-// src/pages/RoomDetailsPage.jsx (Frontend Public)
 import React, { useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchRoomById, clearCurrentRoom } from '../store/slices/roomsSlice'
 import { Users, Bed, Ruler, ArrowLeft } from 'lucide-react'
@@ -10,7 +9,9 @@ import roomsService from '../services/roomsService'
 export default function RoomDetailsPage() {
   const { id } = useParams()
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const { currentRoom: room, isLoading, error } = useSelector((state) => state.rooms)
+  const { isAuthenticated } = useSelector((state) => state.auth)
 
   useEffect(() => {
     if (id) {
@@ -20,6 +21,22 @@ export default function RoomDetailsPage() {
       dispatch(clearCurrentRoom())
     }
   }, [id, dispatch])
+
+  // ✅ GESTION DU CLIC SUR "RÉSERVER" 
+  const handleReservationClick = () => {
+    if (!room?._id) return
+    
+    if (!isAuthenticated) {
+      navigate('/login', { 
+        state: { 
+          from: `/booking?room=${room._id}`,
+          message: 'Connectez-vous pour réserver cette chambre'
+        }
+      })
+    } else {
+      navigate(`/booking?room=${room._id}`)
+    }
+  }
 
   // ✅ UTILISER LA MÊME FONCTION DE FORMATAGE QUE DANS RoomCard
   const formatPrice = (price) => {
@@ -108,12 +125,12 @@ export default function RoomDetailsPage() {
                 </div>
                 {/* SUPPRIMER LA CONVERSION EN EURO POUR ÉVITER LA CONFUSION */}
               </div>
-              <Link
-                to={`/booking?room=${room._id}`}
+              <button
+                onClick={handleReservationClick}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Réserver
-              </Link>
+              </button>
             </div>
           </div>
 
