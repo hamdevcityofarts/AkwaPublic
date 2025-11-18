@@ -1,4 +1,4 @@
-// ✅ src/components/Navbar.jsx (VERSION CORRIGÉE - MENU MOBILE AU-DESSUS)
+// ✅ src/components/Navbar.jsx (VERSION TRANSPARENTE)
 import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -92,14 +92,14 @@ export default function Navbar() {
       <div className="relative z-50" ref={dropdownRef}>
         <button
           onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-gray-700 hover:text-blue-600 bg-white/80 hover:bg-white/95 backdrop-blur-sm border border-white/50 hover:border-blue-200 shadow-soft hover:shadow-medium group"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-white hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 shadow-soft group"
         >
           <div className="relative">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium shadow-md">
+            <div className="w-8 h-8 bg-gradient-to-br from-white/90 to-white/70 rounded-full flex items-center justify-center text-gray-900 text-sm font-medium shadow-md">
               {user.name?.charAt(0)}{user.surname?.charAt(0)}
             </div>
             {isPremium && (
-              <Crown className="w-3 h-3 text-yellow-500 absolute -top-1 -right-1 fill-yellow-500" />
+              <Crown className="w-3 h-3 text-yellow-400 absolute -top-1 -right-1 fill-yellow-400" />
             )}
           </div>
           <span className="text-sm font-semibold whitespace-nowrap group-hover:scale-105 transition-transform">
@@ -107,7 +107,7 @@ export default function Navbar() {
           </span>
           <ChevronDown
             className={`w-4 h-4 transition-all duration-300 ${
-              userDropdownOpen ? "rotate-180 text-blue-600" : "text-gray-400 group-hover:text-blue-600"
+              userDropdownOpen ? "rotate-180 text-white" : "text-white/70 group-hover:text-white"
             }`}
           />
         </button>
@@ -199,23 +199,23 @@ export default function Navbar() {
       className={({ isActive }) =>
         `relative px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap group ${
           isActive
-            ? "text-blue-600 bg-blue-50/80 shadow-soft"
-            : "text-gray-700 hover:text-blue-600 hover:bg-white/80 hover:shadow-soft"
+            ? "text-white bg-white/20 shadow-soft backdrop-blur-sm"
+            : "text-white/90 hover:text-white hover:bg-white/10 hover:shadow-soft backdrop-blur-sm"
         }`
       }
     >
       {children}
-      <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 rounded-full transition-all duration-300 group-hover:w-3/5" />
+      <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:w-3/5" />
     </NavLink>
   );
 
   // --- Structure principale ---
   return (
     <header 
-      className={`sticky top-0 z-40 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
         scrolled 
-          ? "bg-white/95 backdrop-blur-xl shadow-2xl border-b border-white/50" 
-          : "bg-white/90 backdrop-blur-lg shadow-sm"
+          ? "bg-black/20 backdrop-blur-xl shadow-2xl border-b border-white/10" 
+          : "bg-transparent backdrop-blur-md"
       }`}
     >
       <div className="container mx-auto px-6 flex items-center justify-between py-3">
@@ -228,14 +228,14 @@ export default function Navbar() {
             <img
               src={logo}
               alt="Grand Hotel Logo"
-              className="h-14 w-14 md:h-16 md:w-16 object-contain drop-shadow-md"
+              className="h-14 w-14 md:h-16 md:w-16 object-contain drop-shadow-lg"
             />
           </div>
           <div className="hidden lg:block">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold text-white drop-shadow-lg">
               Grand Hotel
             </h1>
-            <p className="text-xs text-gray-500 font-medium">Luxury & Comfort</p>
+            <p className="text-xs text-white/80 font-medium">Luxury & Comfort</p>
           </div>
         </Link>
 
@@ -260,19 +260,19 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 to="/my-reservations"
-                className="px-4 py-2.5 rounded-xl font-semibold text-gray-700 hover:text-blue-600 hover:bg-white/80 hover:shadow-soft transition-all duration-300 whitespace-nowrap"
+                className="px-4 py-2.5 rounded-xl font-semibold text-white/90 hover:text-white hover:bg-white/10 hover:shadow-soft transition-all duration-300 whitespace-nowrap backdrop-blur-sm"
               >
                 Mes Réservations
               </Link>
               <Link
                 to="/login"
-                className="px-6 py-2.5 rounded-xl font-semibold text-gray-700 hover:text-blue-600 hover:bg-white/80 hover:shadow-soft transition-all duration-300 whitespace-nowrap border border-gray-200/50"
+                className="px-6 py-2.5 rounded-xl font-semibold text-white/90 hover:text-white hover:bg-white/10 hover:shadow-soft transition-all duration-300 whitespace-nowrap border border-white/20 backdrop-blur-sm"
               >
                 Connexion
               </Link>
               <Link
                 to="/signup"
-                className="px-6 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-soft hover:shadow-medium transition-all duration-300 whitespace-nowrap hover:scale-105 transform"
+                className="px-6 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 shadow-soft hover:shadow-medium transition-all duration-300 whitespace-nowrap hover:scale-105 transform border border-white/20 backdrop-blur-sm"
               >
                 S'inscrire
               </Link>
@@ -282,156 +282,156 @@ export default function Navbar() {
 
         {/* Bouton Menu Mobile Stylisé */}
         <button
-          className="md:hidden p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white hover:shadow-soft transition-all duration-300 z-50"
+          className="md:hidden p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 hover:shadow-soft transition-all duration-300 z-50"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? (
-            <X className="w-5 h-5 text-gray-700" />
+            <X className="w-5 h-5 text-white" />
           ) : (
-            <Menu className="w-5 h-5 text-gray-700" />
+            <Menu className="w-5 h-5 text-white" />
           )}
         </button>
       </div>
 
       {/* Menu Mobile - Au-dessus du contenu */}
-{mobileMenuOpen && (
-  <>
-    {/* Overlay sombre */}
-    <div 
-      className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 top-0"
-      onClick={closeMobileMenu}
-    />
-    
-    {/* Menu Mobile */}
-    <div 
-      ref={mobileMenuRef}
-      className="md:hidden fixed top-0 left-0 right-0 h-screen bg-white z-50 overflow-y-auto"
-    >
-      {/* Header du menu mobile */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link 
-            to="/" 
-            className="flex items-center gap-3"
+      {mobileMenuOpen && (
+        <>
+          {/* Overlay sombre */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 top-0"
             onClick={closeMobileMenu}
-          >
-            <div className="w-12 h-12 flex items-center justify-center">
-              <img
-                src={logo}
-                alt="Grand Hotel Logo"
-                className="h-10 w-10 object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Grand Hotel
-              </h1>
-            </div>
-          </Link>
+          />
           
-          <button
-            onClick={closeMobileMenu}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+          {/* Menu Mobile */}
+          <div 
+            ref={mobileMenuRef}
+            className="md:hidden fixed top-0 left-0 right-0 h-screen bg-white z-50 overflow-y-auto"
           >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-      </div>
-
-      {/* Contenu du menu */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="space-y-2">
-          <MobileNavLink to="/rooms" onClick={closeMobileMenu}>
-            Chambres/Suites
-          </MobileNavLink>
-          <MobileNavLink to="/about" onClick={closeMobileMenu}>
-            À propos
-          </MobileNavLink>
-          <MobileNavLink to="/contact" onClick={closeMobileMenu}>
-            Contact
-          </MobileNavLink>
-
-          {isAuthenticated ? (
-            <>
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl mb-3 border border-blue-200">
-                  <p className="font-bold text-gray-900 text-sm">
-                    {user?.name} {user?.surname}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {user?.email}
-                  </p>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full capitalize mt-1">
-                    {user.role === "premium" || user.role === "admin" ? (
-                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                    ) : null}
-                    {user.role}
-                  </span>
-                </div>
-
-                <MobileNavLink
-                  to="/my-reservations"
+            {/* Header du menu mobile */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+              <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+                <Link 
+                  to="/" 
+                  className="flex items-center gap-3"
                   onClick={closeMobileMenu}
-                  icon={<Calendar className="w-4 h-4" />}
                 >
-                  Mes Réservations
-                </MobileNavLink>
-                <MobileNavLink
-                  to="/profile"
-                  onClick={closeMobileMenu}
-                  icon={<User className="w-4 h-4" />}
-                >
-                  Mon Profil
-                </MobileNavLink>
-                <MobileNavLink
-                  to="/change-password"
-                  onClick={closeMobileMenu}
-                  icon={<Settings className="w-4 h-4" />}
-                >
-                  Changer mot de passe
-                </MobileNavLink>
-
+                  <div className="w-12 h-12 flex items-center justify-center">
+                    <img
+                      src={logo}
+                      alt="Grand Hotel Logo"
+                      className="h-10 w-10 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      Grand Hotel
+                    </h1>
+                  </div>
+                </Link>
+                
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 text-left mt-2 border border-red-200"
+                  onClick={closeMobileMenu}
+                  className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
-                  <LogOut className="w-4 h-4 mr-3" />
-                  <span className="font-semibold">Déconnexion</span>
+                  <X className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
-            </>
-          ) : (
-            <>
-              <MobileNavLink
-                to="/my-reservations"
-                onClick={closeMobileMenu}
-              >
-                Mes Réservations
-              </MobileNavLink>
+            </div>
 
-              <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
-                <Link
-                  to="/login"
-                  onClick={closeMobileMenu}
-                  className="block w-full text-center px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
-                >
-                  Connexion
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={closeMobileMenu}
-                  className="block w-full text-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 shadow-soft transition-all duration-300 transform hover:scale-105"
-                >
-                  S'inscrire
-                </Link>
+            {/* Contenu du menu */}
+            <div className="container mx-auto px-6 py-6">
+              <div className="space-y-2">
+                <MobileNavLink to="/rooms" onClick={closeMobileMenu}>
+                  Chambres/Suites
+                </MobileNavLink>
+                <MobileNavLink to="/about" onClick={closeMobileMenu}>
+                  À propos
+                </MobileNavLink>
+                <MobileNavLink to="/contact" onClick={closeMobileMenu}>
+                  Contact
+                </MobileNavLink>
+
+                {isAuthenticated ? (
+                  <>
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl mb-3 border border-blue-200">
+                        <p className="font-bold text-gray-900 text-sm">
+                          {user?.name} {user?.surname}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {user?.email}
+                        </p>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full capitalize mt-1">
+                          {user.role === "premium" || user.role === "admin" ? (
+                            <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                          ) : null}
+                          {user.role}
+                        </span>
+                      </div>
+
+                      <MobileNavLink
+                        to="/my-reservations"
+                        onClick={closeMobileMenu}
+                        icon={<Calendar className="w-4 h-4" />}
+                      >
+                        Mes Réservations
+                      </MobileNavLink>
+                      <MobileNavLink
+                        to="/profile"
+                        onClick={closeMobileMenu}
+                        icon={<User className="w-4 h-4" />}
+                      >
+                        Mon Profil
+                      </MobileNavLink>
+                      <MobileNavLink
+                        to="/change-password"
+                        onClick={closeMobileMenu}
+                        icon={<Settings className="w-4 h-4" />}
+                      >
+                        Changer mot de passe
+                      </MobileNavLink>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 text-left mt-2 border border-red-200"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        <span className="font-semibold">Déconnexion</span>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <MobileNavLink
+                      to="/my-reservations"
+                      onClick={closeMobileMenu}
+                    >
+                      Mes Réservations
+                    </MobileNavLink>
+
+                    <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
+                      <Link
+                        to="/login"
+                        onClick={closeMobileMenu}
+                        className="block w-full text-center px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+                      >
+                        Connexion
+                      </Link>
+                      <Link
+                        to="/signup"
+                        onClick={closeMobileMenu}
+                        className="block w-full text-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 shadow-soft transition-all duration-300 transform hover:scale-105"
+                      >
+                        S'inscrire
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  </>
-)}
+            </div>
+          </div>
+        </>
+      )}
     </header>
   );
 }

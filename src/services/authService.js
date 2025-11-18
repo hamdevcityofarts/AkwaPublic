@@ -13,18 +13,34 @@ const authService = {
   },
 
   // ✅ NOUVEAU: Mettre à jour le profil
-  updateProfile: (profileData) => {
-    return api.put('/auth/profile', profileData)
+  updateProfile: async (profileData) => {
+    try {
+      const response = await api.put('/auth/profile', profileData);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
+
 
   // ✅ NOUVEAU: Changer le mot de passe
-  changePassword: (passwordData) => {
-    return api.put('/auth/change-password', passwordData)
+
+  changePassword: async (passwordData) => {
+    try {
+      const response = await api.put('/auth/change-password', passwordData);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  // Vérifier le token
-  verifyToken: () => {
-    return api.get('/auth/verify')
+   verifyToken: async () => {
+    try {
+      const response = await api.get('/auth/verify');
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
   // Login avec nom, prénom et ID de réservation (si nécessaire)

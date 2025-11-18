@@ -52,7 +52,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="hero-height relative overflow-hidden">
+    <section className=" hero-height relative overflow-hidden">
       {/* Slides */}
       <div className="absolute inset-0">
         {slides.map((slide, index) => (

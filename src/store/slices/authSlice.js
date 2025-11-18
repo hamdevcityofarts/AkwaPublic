@@ -1,4 +1,4 @@
-// src/store/slices/authSlice.js (MODIFIÉ)
+// src/store/slices/authSlice.js (VERSION COMPLÈTE CORRIGÉE)
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import authService from '../../services/authService'
 
@@ -28,28 +28,53 @@ export const register = createAsyncThunk(
   }
 )
 
-// ✅ NOUVEAU: Mettre à jour le profil
+// ✅ CORRIGÉ: Mettre à jour le profil avec meilleure gestion d'erreur
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
-  async (profileData, { rejectWithValue }) => {
+  async (profileData, { rejectWithValue, getState }) => {
     try {
-      const response = await authService.updateProfile(profileData)
-      return response.data
+      const token = getState().auth.token;
+      if (!token) {
+        return rejectWithValue('Token manquant. Veuillez vous reconnecter.');
+      }
+      
+      const response = await authService.updateProfile(profileData);
+      
+      if (!response.data) {
+        throw new Error('Réponse invalide du serveur');
+      }
+      
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Erreur lors de la mise à jour du profil')
+      console.error('Erreur updateProfile:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 
+        error.message || 
+        'Erreur lors de la mise à jour du profil'
+      );
     }
   }
 )
 
-// ✅ NOUVEAU: Changer le mot de passe
+// ✅ CORRIGÉ: Changer le mot de passe
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
-  async (passwordData, { rejectWithValue }) => {
+  async (passwordData, { rejectWithValue, getState }) => {
     try {
-      const response = await authService.changePassword(passwordData)
-      return response.data
+      const token = getState().auth.token;
+      if (!token) {
+        return rejectWithValue('Token manquant. Veuillez vous reconnecter.');
+      }
+      
+      const response = await authService.changePassword(passwordData);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Erreur lors du changement de mot de passe')
+      console.error('Erreur changePassword:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 
+        error.message || 
+        'Erreur lors du changement de mot de passe'
+      );
     }
   }
 )
@@ -75,11 +100,17 @@ const authSlice = createSlice({
       state.user = null
       state.token = null
       state.isAuthenticated = false
+      state.error = null
       localStorage.removeItem('token')
       localStorage.removeItem('user')
     },
     clearError: (state) => {
       state.error = null
+    },
+    // ✅ NOUVEAU: Mettre à jour l'utilisateur localement
+    updateUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload };
+      localStorage.setItem('user', JSON.stringify(state.user));
     }
   },
   extraReducers: (builder) => {
@@ -118,28 +149,29 @@ const authSlice = createSlice({
         state.isLoading = false
         state.error = action.payload
       })
-      // ✅ Update Profile
+      // ✅ CORRIGÉ: Update Profile
       .addCase(updateProfile.pending, (state) => {
         state.isLoading = true
         state.error = null
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.isLoading = false
-        state.user = action.payload.user
-        localStorage.setItem('user', JSON.stringify(action.payload.user))
+        state.user = action.payload.user || action.payload
+        state.error = null
+        localStorage.setItem('user', JSON.stringify(state.user))
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload
       })
-      // ✅ Change Password
+      // ✅ CORRIGÉ: Change Password
       .addCase(changePassword.pending, (state) => {
         state.isLoading = true
         state.error = null
       })
       .addCase(changePassword.fulfilled, (state) => {
         state.isLoading = false
-        // Le mot de passe est changé, pas besoin de mettre à jour l'user
+        state.error = null
       })
       .addCase(changePassword.rejected, (state, action) => {
         state.isLoading = false
@@ -148,5 +180,5 @@ const authSlice = createSlice({
   }
 })
 
-export const { loginSuccess, logout, clearError } = authSlice.actions
+export const { loginSuccess, logout, clearError, updateUser } = authSlice.actions
 export default authSlice.reducer

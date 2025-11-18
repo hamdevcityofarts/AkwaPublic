@@ -1,14 +1,11 @@
-// pages/PaymentResult.jsx - VERSION MISE À JOUR AVEC COMPTE AUTOMATIQUE
-import React, { useEffect, useState } from 'react';
+// pages/PaymentResult.jsx - VERSION SIMPLIFIÉE SANS COMPTE AUTOMATIQUE
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, XCircle, Loader, Home, Download, Calendar, AlertTriangle, Printer, User, Key, Mail } from 'lucide-react';
+import { CheckCircle, XCircle, Home, Download, Calendar, AlertTriangle, Printer } from 'lucide-react';
 
 const PaymentResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const [loading, setLoading] = useState(false);
-  const [showCredentials, setShowCredentials] = useState(false);
   
   // ✅ Récupération des paramètres URL
   const searchParams = new URLSearchParams(location.search);
@@ -18,12 +15,6 @@ const PaymentResult = () => {
   const amount = searchParams.get('amount');
   const errorMessage = searchParams.get('message');
   const errorCode = searchParams.get('code');
-  
-  // ✅ NOUVEAUX PARAMÈTRES : Compte automatique
-  const autoAccount = searchParams.get('autoAccount') === 'true';
-  const clientEmail = searchParams.get('clientEmail');
-  const clientPassword = searchParams.get('clientPassword');
-  const clientId = searchParams.get('clientId');
 
   // 🐛 DEBUG - Afficher les paramètres dans la console
   useEffect(() => {
@@ -33,17 +24,8 @@ const PaymentResult = () => {
       transactionId,
       amount,
       errorMessage,
-      errorCode,
-      autoAccount,
-      clientEmail,
-      clientPassword: clientPassword ? '***' : null,
-      clientId
+      errorCode
     });
-
-    // Afficher automatiquement les identifiants si compte créé
-    if (autoAccount && clientEmail && clientPassword) {
-      setShowCredentials(true);
-    }
   }, []);
 
   // Formater le montant en XAF
@@ -52,15 +34,8 @@ const PaymentResult = () => {
     return `${parseInt(amt).toLocaleString('fr-FR')} FCFA`;
   };
 
-  // ✅ NOUVELLE FONCTION : Copier les identifiants
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert('Copié dans le presse-papier !');
-  };
-
-  // ✅ FONCTION : Télécharger le reçu (inchangée)
+  // ✅ FONCTION : Télécharger le reçu (simplifiée sans compte)
   const handleDownloadPDF = () => {
-    // ... (le code existant reste inchangé)
     const receiptHTML = `
 <!DOCTYPE html>
 <html lang="fr">
@@ -82,16 +57,14 @@ const PaymentResult = () => {
         .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; color: #6b7280; font-size: 12px; }
         .important-info { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
         .transaction-id { font-family: 'Courier New', monospace; background: #f3f4f6; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
-        .credentials-box { background: #dbeafe; border: 2px solid #3b82f6; border-radius: 10px; padding: 20px; margin: 20px 0; }
-        .credential-item { background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #93c5fd; }
     </style>
 </head>
 <body>
     <div class="receipt">
         <div class="header">
-            <h1>🏨 Grand Hotel</h1>
-            <p>Aéroport International de Yaoundé-Nsimalen</p>
-            <p>Cameroun</p>
+            <img src="/assets/ghLogo.png" alt="Grand Hotel" style="height: 80px; margin-bottom: 20px;">
+            <p>Hotel grand Lux </p>
+            <p>Douala Cameroun</p>
             <div class="success-badge">✓ PAIEMENT CONFIRMÉ</div>
         </div>
 
@@ -118,21 +91,6 @@ const PaymentResult = () => {
                 <span class="info-label">Transaction ID:</span>
                 <span class="info-value transaction-id">${transactionId || 'N/A'}</span>
             </div>
-
-            ${autoAccount && clientEmail ? `
-            <div class="credentials-box">
-                <h3 style="color: #1e40af; margin-bottom: 15px;">🎉 Votre compte client a été créé !</h3>
-                <div class="credential-item">
-                    <strong>Email:</strong> ${clientEmail}
-                </div>
-                <div class="credential-item">
-                    <strong>Mot de passe:</strong> ${clientPassword}
-                </div>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 10px;">
-                    Conservez précieusement ces identifiants pour accéder à votre compte.
-                </p>
-            </div>
-            ` : ''}
         </div>
 
         <div class="info-section">
@@ -169,13 +127,12 @@ const PaymentResult = () => {
                 <li><strong>Document requis:</strong> Pièce d'identité valide</li>
                 <li><strong>Confirmation:</strong> Présentez ce reçu ou le numéro de réservation à la réception</li>
                 <li><strong>Reçu complet:</strong> Un reçu détaillé sera envoyé par email</li>
-                ${autoAccount ? '<li><strong>Compte client:</strong> Vos identifiants sont inclus dans ce reçu</li>' : ''}
             </ul>
         </div>
 
         <div class="footer">
             <p><strong>Grand Hotel - Aéroport Nsimalen</strong></p>
-            <p>Tél: +237 656 708 074 | Email: contact@grandhotel.com</p>
+            <p>Tél:  (+237) 699 901 204 | Email: aeroport@mygrandhotel.com</p>
             <p style="margin-top: 10px; font-size: 10px;">
                 Ce document est une confirmation de paiement électronique.<br>
                 Conservez-le précieusement pour votre séjour.
@@ -215,94 +172,19 @@ const PaymentResult = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4 animate-bounce">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
+            {/* Logo remplacé */}
+            <img 
+              src="/assets/ghLogo.png" 
+              alt="Grand Hotel" 
+              className="h-16 mx-auto mb-4"
+            />
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Paiement Confirmé !
             </h1>
             <p className="text-lg text-gray-600">
               Votre réservation a été confirmée avec succès
             </p>
-            {autoAccount && (
-              <div className="mt-4 inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
-                <User className="w-4 h-4 mr-2" />
-                <span className="text-sm font-semibold">Compte client créé automatiquement</span>
-              </div>
-            )}
           </div>
-
-          {/* ✅ NOUVEAU : SECTION IDENTIFIANTS COMPTE */}
-          {autoAccount && clientEmail && clientPassword && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-blue-100 p-2 rounded-full mr-3">
-                  <Key className="w-6 h-6 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900">
-                  🎉 Votre compte client a été créé !
-                </h3>
-              </div>
-              
-              <p className="text-blue-800 mb-4">
-                Vous pouvez maintenant vous connecter à votre espace client avec ces identifiants :
-              </p>
-
-              <div className="space-y-3 mb-4">
-                {/* Email */}
-                <div className="bg-white rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Mail className="w-5 h-5 text-gray-500 mr-3" />
-                      <div>
-                        <div className="text-sm text-gray-600">Email</div>
-                        <div className="font-mono font-semibold text-gray-900">{clientEmail}</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(clientEmail)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Copier
-                    </button>
-                  </div>
-                </div>
-
-                {/* Mot de passe */}
-                <div className="bg-white rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Key className="w-5 h-5 text-gray-500 mr-3" />
-                      <div>
-                        <div className="text-sm text-gray-600">Mot de passe</div>
-                        <div className="font-mono font-semibold text-gray-900">
-                          {showCredentials ? clientPassword : '••••••••'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => setShowCredentials(!showCredentials)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        {showCredentials ? 'Masquer' : 'Afficher'}
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(clientPassword)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        Copier
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                <p className="text-yellow-800 text-sm">
-                  <strong>⚠️ Important :</strong> Conservez précieusement ces identifiants. 
-                  Vous en aurez besoin pour accéder à votre compte et gérer vos réservations.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Détails du paiement */}
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -372,9 +254,6 @@ const PaymentResult = () => {
               <li>• Une pièce d'identité valide sera demandée à l'arrivée</li>
               <li>• Présentez cette confirmation ou le numéro de réservation à la réception</li>
               <li>• Le reçu détaillé sera envoyé par email automatiquement</li>
-              {autoAccount && (
-                <li>• <strong>Vos identifiants de connexion</strong> sont disponibles ci-dessus</li>
-              )}
             </ul>
           </div>
         </div>
@@ -392,6 +271,12 @@ const PaymentResult = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
               <XCircle className="w-12 h-12 text-red-600" />
             </div>
+            {/* Logo remplacé */}
+            <img 
+              src="/assets/ghLogo.png" 
+              alt="Grand Hotel" 
+              className="h-16 mx-auto mb-4"
+            />
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Paiement Échoué
             </h1>
@@ -457,6 +342,12 @@ const PaymentResult = () => {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
         <AlertTriangle className="w-16 h-16 text-yellow-600 mx-auto mb-4" />
+        {/* Logo remplacé */}
+        <img 
+          src="/assets/ghLogo.png" 
+          alt="Grand Hotel" 
+          className="h-16 mx-auto mb-4"
+        />
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Paramètres Manquants
         </h2>

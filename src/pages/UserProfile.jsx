@@ -1,14 +1,14 @@
-// src/pages/UserProfile.jsx
+// src/pages/UserProfile.jsx (VERSION COMPLÈTE CORRIGÉE)
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { updateProfile } from '../store/slices/authSlice';
+import { updateProfile, clearError } from '../store/slices/authSlice';
 import { User, Mail, Phone, Save, ArrowLeft, Loader, CheckCircle, AlertCircle } from 'lucide-react';
 
 const UserProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, error } = useSelector((state) => state.auth);
+  const { user, isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
   
   const [form, setForm] = useState({
     name: '',
@@ -18,26 +18,35 @@ const UserProfile = () => {
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [localError, setLocalError] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialiser le formulaire avec les données utilisateur
+  // Nettoyer les erreurs au démontage
   useEffect(() => {
-    if (user) {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
+  // Initialiser le formulaire
+  useEffect(() => {
+    if (user && !isInitialized) {
       setForm({
         name: user.name || '',
         surname: user.surname || '',
         email: user.email || '',
         phone: user.phone || ''
       });
+      setIsInitialized(true);
     }
-  }, [user]);
+  }, [user, isInitialized]);
 
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value
     });
-    setLocalError('');
-    setSuccessMessage('');
+    // Effacer les erreurs locales
+    if (localError) setLocalError('');
   };
 
   const validateForm = () => {
@@ -62,31 +71,29 @@ const UserProfile = () => {
     if (!validateForm()) return;
 
     try {
+      // Effacer les erreurs précédentes
+      dispatch(clearError());
+      setLocalError('');
+
       const result = await dispatch(updateProfile(form)).unwrap();
       
       setSuccessMessage('Profil mis à jour avec succès !');
-      setLocalError('');
       
       // Effacer le message de succès après 5 secondes
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (err) {
+      console.error('Erreur mise à jour profil:', err);
       setLocalError(err || 'Erreur lors de la mise à jour du profil');
-      setSuccessMessage('');
     }
   };
 
-  if (!user) {
+  // Si non authentifié, le ProtectedRoute redirigera automatiquement
+  if (!isAuthenticated || !user) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Accès non autorisé</h2>
-          <p className="text-gray-600 mb-6">Veuillez vous connecter pour accéder à votre profil.</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Se connecter
-          </button>
+        <div className="max-w-2xl mx-auto text-center">
+          <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Vérification de l'authentification...</p>
         </div>
       </div>
     );
@@ -100,6 +107,7 @@ const UserProfile = () => {
           <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            disabled={isLoading}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour
@@ -117,14 +125,14 @@ const UserProfile = () => {
 
         {/* Messages d'alerte */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center animate-in fade-in-0">
             <CheckCircle className="w-5 h-5 mr-2 flex-shrink-0" />
             <span className="text-sm">{successMessage}</span>
           </div>
         )}
 
         {(error || localError) && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center animate-in fade-in-0">
             <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
             <span className="text-sm">{error || localError}</span>
           </div>
@@ -150,7 +158,8 @@ const UserProfile = () => {
                       value={form.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Votre nom"
                     />
                   </div>
@@ -165,7 +174,8 @@ const UserProfile = () => {
                       name="surname"
                       value={form.surname}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Votre prénom"
                     />
                   </div>
@@ -189,7 +199,8 @@ const UserProfile = () => {
                       value={form.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="votre@email.com"
                     />
                   </div>
@@ -205,7 +216,8 @@ const UserProfile = () => {
                       name="phone"
                       value={form.phone}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="+237 XXX XX XX XX"
                     />
                   </div>
@@ -219,19 +231,19 @@ const UserProfile = () => {
                   <div>
                     <span className="font-medium">Rôle :</span> 
                     <span className="ml-2 capitalize bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                      {user.role}
+                      {user.role || 'Non spécifié'}
                     </span>
                   </div>
                   <div>
                     <span className="font-medium">Membre depuis :</span>
                     <span className="ml-2">
-                      {new Date(user.memberSince).toLocaleDateString('fr-FR')}
+                      {user.memberSince ? new Date(user.memberSince).toLocaleDateString('fr-FR') : 'Non spécifié'}
                     </span>
                   </div>
                   <div>
                     <span className="font-medium">Statut :</span>
                     <span className="ml-2 capitalize bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                      {user.status}
+                      {user.status || 'Actif'}
                     </span>
                   </div>
                   {user.lastLogin && (
@@ -250,7 +262,8 @@ const UserProfile = () => {
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={isLoading}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Annuler
                 </button>
@@ -280,7 +293,8 @@ const UserProfile = () => {
         <div className="mt-6 grid md:grid-cols-2 gap-4">
           <button
             onClick={() => navigate('/change-password')}
-            className="p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500 transition-colors text-left"
+            disabled={isLoading}
+            className="p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -297,7 +311,8 @@ const UserProfile = () => {
 
           <button
             onClick={() => navigate('/my-reservations')}
-            className="p-4 bg-white border border-gray-200 rounded-lg hover:border-green-500 transition-colors text-left"
+            disabled={isLoading}
+            className="p-4 bg-white border border-gray-200 rounded-lg hover:border-green-500 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">

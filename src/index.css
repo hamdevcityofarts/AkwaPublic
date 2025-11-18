@@ -39,8 +39,8 @@ body{
 
 
 /* Limit hero image height */
-.hero-height{
-height: min(60vh, 720px);
+.hero-height {
+  height: 80vh;
 }
 
 
