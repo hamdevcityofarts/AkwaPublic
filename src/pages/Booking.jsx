@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import PaymentForm from '../components/SecurePaymentForm';
-import { Calendar, Users, AlertCircle, CheckCircle, Loader, CreditCard, Tag } from 'lucide-react';
+import { Calendar, Users, AlertCircle, CheckCircle, Loader, CreditCard } from 'lucide-react';
 import roomsService from '../services/roomsService';
 import reservationsService from '../services/reservationsService';
-import promoCodesService from '../services/promoCodesService';
 
 export default function Booking() {
   const navigate = useNavigate();
@@ -12,7 +11,7 @@ export default function Booking() {
   const location = useLocation();
   const roomId = searchParams.get('room');
 
-  // États
+  // ✅ ÉTATS SIMPLIFIÉS
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,11 +20,8 @@ export default function Booking() {
   const [reservation, setReservation] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
 
-  // ✅ États pour les codes promotionnels
-  const [promoCode, setPromoCode] = useState('');
-  const [promoVerification, setPromoVerification] = useState(null);
-  const [verifyingPromo, setVerifyingPromo] = useState(false);
-  const [promoError, setPromoError] = useState('');
+  // ✅ ÉTAT PROMO - UNIQUEMENT POUR LES DONNÉES REÇUES
+  const [activePromo, setActivePromo] = useState(null);
 
   // États existants pour les options de paiement
   const [paymentOption, setPaymentOption] = useState('full');
@@ -45,17 +41,52 @@ export default function Booking() {
     specialRequests: ''
   });
 
-  // ✅ Récupérer les données promo depuis la navigation
+  // ✅ RÉCUPÉRER LES DONNÉES PROMO DEPUIS LA NAVIGATION
   useEffect(() => {
     if (location.state?.promoData) {
-      const promoData = location.state.promoData;
-      setPromoVerification({
-        success: true,
-        codePromo: promoData
-      });
-      setPromoCode(promoData.codePromo);
+      console.log('🎯 Promo reçue depuis navigation:', location.state.promoData);
+      setActivePromo(location.state.promoData);
+      
+      // ✅ RÉINITIALISER LES DATES SI ELLES NE SONT PAS DANS L'INTERVALLE
+      const { checkin, checkout } = form;
+      if (checkin || checkout) {
+        const promoStart = new Date(location.state.promoData.dateDebut);
+        const promoEnd = new Date(location.state.promoData.dateFin);
+        
+        if (checkin && new Date(checkin) < promoStart) {
+          setForm(prev => ({ ...prev, checkin: '' }));
+        }
+        if (checkout && new Date(checkout) > promoEnd) {
+          setForm(prev => ({ ...prev, checkout: '' }));
+        }
+      }
     }
   }, [location.state]);
+
+  // ✅ CALCULER LES DATES MIN/MAX POUR LES CALENDRIERS
+  const getDateConstraints = () => {
+    if (activePromo) {
+      // ✅ AVEC PROMO : RESTREINDRE AUX DATES DE VALIDITÉ
+      const promoStart = new Date(activePromo.dateDebut);
+      const promoEnd = new Date(activePromo.dateFin);
+      
+      return {
+        minDate: promoStart.toISOString().split('T')[0],
+        maxDate: promoEnd.toISOString().split('T')[0],
+        minCheckout: form.checkin || promoStart.toISOString().split('T')[0]
+      };
+    } else {
+      // ✅ SANS PROMO : DATES STANDARD
+      const today = new Date().toISOString().split('T')[0];
+      return {
+        minDate: today,
+        maxDate: null, // Pas de restriction max sans promo
+        minCheckout: form.checkin || today
+      };
+    }
+  };
+
+  const dateConstraints = getDateConstraints();
 
   // ✅ FORMATER LE PRIX EN XAF
   const formatPrice = (price) => {
@@ -97,66 +128,14 @@ export default function Booking() {
     if (name === 'roomId') {
       const room = rooms.find(r => r._id === value);
       setSelectedRoom(room);
-      // Réinitialiser la vérification du code promo si la chambre change
-      setPromoVerification(null);
-      setPromoError('');
-    }
-  };
-
-  // ✅ NOUVEAU: Fonction pour vérifier le code promo AVEC VALIDATION DES DATES
-  const verifyPromoCode = async () => {
-    if (!promoCode || !selectedRoom) {
-      setPromoError('Veuillez sélectionner une chambre et entrer un code promo');
-      return;
+      // ✅ RÉINITIALISER LA PROMO SI LA CHAMBRE CHANGE
+      setActivePromo(null);
     }
 
-    setVerifyingPromo(true);
-    setPromoError('');
-    
-    try {
-      // ✅ MODIFICATION : Inclure les dates pour validation temporelle
-      const response = await promoCodesService.verifyCodePromo(
-        promoCode, 
-        selectedRoom._id, 
-        calculateNights(),
-        form.checkin,
-        form.checkout
-      );
-
-      if (response.success) {
-        setPromoVerification(response);
-        setPromoError('');
-        console.log('✅ Code promo appliqué:', response);
-        
-        // ✅ Afficher un avertissement si les dates ne sont pas valides
-        if (response.codePromo.isValidForDates === false) {
-          setPromoError(response.codePromo.dateValidationMessage);
-        }
-      } else {
-        setPromoVerification(null);
-        setPromoError(response.message || 'Code promo invalide');
-      }
-    } catch (error) {
-      console.error('❌ Erreur vérification code promo:', error);
-      setPromoVerification(null);
-      setPromoError('Erreur lors de la vérification du code promo');
-    } finally {
-      setVerifyingPromo(false);
+    // ✅ RÉINITIALISER CHECKOUT SI CHECKIN CHANGE
+    if (name === 'checkin') {
+      setForm(prev => ({ ...prev, checkout: '' }));
     }
-  };
-
-  // ✅ NOUVEAU: Re-vérifier le code promo quand les dates changent
-  useEffect(() => {
-    if (promoVerification && form.checkin && form.checkout) {
-      verifyPromoCode();
-    }
-  }, [form.checkin, form.checkout]);
-
-  // ✅ NOUVEAU: Supprimer le code promo
-  const removePromoCode = () => {
-    setPromoCode('');
-    setPromoVerification(null);
-    setPromoError('');
   };
 
   // Gestion du changement d'option de paiement
@@ -189,42 +168,32 @@ export default function Booking() {
     return 0;
   };
 
-  // Calculer le montant selon l'option choisie (PRIX ORIGINAL)
+  // ✅ CALCULER LE MONTANT SELON L'OPTION CHOISIE (PRIX PROMO SI ACTIF)
   const calculateAmountToPay = () => {
     if (!selectedRoom) return 0;
     
     const totalNights = calculateNights();
-    const pricePerNight = selectedRoom.price;
+    
+    // ✅ PRIX DE BASE : PROMO SI ACTIVE, SINON PRIX NORMAL
+    const basePricePerNight = activePromo ? activePromo.prixReduit : selectedRoom.price;
 
     switch (paymentOption) {
       case 'first-night':
-        return pricePerNight;
+        return basePricePerNight;
       
       case 'partial':
         const nightsToPay = Math.min(partialNights, totalNights);
-        return pricePerNight * nightsToPay;
+        return basePricePerNight * nightsToPay;
       
       case 'full':
       default:
-        return pricePerNight * totalNights;
+        return basePricePerNight * totalNights;
     }
   };
 
-  // ✅ NOUVEAU: Calculer le montant FINAL avec code promo
+  // ✅ CALCULER LE MONTANT FINAL (TOUJOURS AVEC PROMO SI ACTIVE)
   const calculateFinalAmount = () => {
-    let amount = calculateAmountToPay();
-    
-    if (promoVerification?.success && promoVerification.codePromo.isValidForDates !== false) {
-      // Appliquer la réduction seulement si les dates sont valides
-      const prixReduit = promoVerification.codePromo.prixReduit;
-      const prixOriginal = promoVerification.codePromo.prixOriginal;
-      
-      // Calculer le ratio de réduction
-      const reductionRatio = prixReduit / prixOriginal;
-      amount = amount * reductionRatio;
-    }
-    
-    return Math.round(amount);
+    return Math.round(calculateAmountToPay());
   };
 
   // Obtenir le nombre de nuits à payer
@@ -290,13 +259,6 @@ export default function Booking() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setPromoError('');
-
-    // ✅ NOUVEAU: Validation des dates avec le code promo
-    if (promoVerification?.success && promoVerification.codePromo.isValidForDates === false) {
-      setError('Les dates sélectionnées ne sont pas valides avec ce code promo. Veuillez modifier vos dates ou retirer le code promo.');
-      return;
-    }
 
     // Validations existantes
     if (!form.roomId) {
@@ -327,6 +289,17 @@ export default function Booking() {
       return;
     }
 
+    // ✅ VALIDATION STRICTE DES DATES PAR RAPPORT À LA PROMO
+    if (activePromo) {
+      const promoStart = new Date(activePromo.dateDebut);
+      const promoEnd = new Date(activePromo.dateFin);
+      
+      if (checkInDate < promoStart || checkOutDate > promoEnd) {
+        setError(`Les dates doivent être strictement comprises entre ${promoStart.toLocaleDateString('fr-FR')} et ${promoEnd.toLocaleDateString('fr-FR')} pour bénéficier de cette promotion`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -344,10 +317,8 @@ export default function Booking() {
         paymentMethod: 'card',
         paymentOption: paymentOption,
         nightsToPay: getNightsToPay(),
-        // ✅ Inclure le code promo seulement si valide pour les dates
-        codePromo: (promoVerification?.success && promoVerification.codePromo.isValidForDates !== false) 
-          ? promoCode 
-          : undefined,
+        // ✅ INCLURE LE CODE PROMO SEULEMENT SI ACTIF
+        codePromo: activePromo ? activePromo.codePromo : undefined,
         clientInfo: {
           name: form.name,
           surname: form.surname,
@@ -489,16 +460,16 @@ export default function Booking() {
                 <span className="font-medium capitalize">{getPaymentOptionDescription()}</span>
               </div>
               
-              {/* ✅ Affichage de la réduction */}
-              {reservation.reductionAppliquee > 0 && (
+              {/* ✅ Affichage de la réduction si promo active */}
+              {activePromo && (
                 <>
                   <div className="flex justify-between text-green-600">
                     <span>Réduction appliquée:</span>
-                    <span className="font-medium">-{formatPrice(reservation.reductionAppliquee)}</span>
+                    <span className="font-medium">-{formatPrice(activePromo.economie)}</span>
                   </div>
                   <div className="flex justify-between text-gray-500 text-xs">
                     <span>Code promo:</span>
-                    <span className="font-medium">{reservation.codePromoUtilise}</span>
+                    <span className="font-medium">{activePromo.codePromo}</span>
                   </div>
                 </>
               )}
@@ -593,6 +564,23 @@ export default function Booking() {
         onSubmit={handleSubmit}
         className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-soft"
       >
+        {/* ✅ INDICATION PROMO ACTIVE */}
+        {activePromo && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-green-800">🎟️ Code promo actif</p>
+                <p className="text-sm text-green-700">
+                  Validité: {new Date(activePromo.dateDebut).toLocaleDateString('fr-FR')} au {new Date(activePromo.dateFin).toLocaleDateString('fr-FR')}
+                </p>
+              </div>
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                {activePromo.codePromo}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Sélection de la chambre */}
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2">Chambre *</label>
@@ -673,10 +661,16 @@ export default function Booking() {
               value={form.checkin}
               onChange={handleChange}
               type="date"
-              min={new Date().toISOString().split('T')[0]}
+              min={dateConstraints.minDate}
+              max={dateConstraints.maxDate || undefined}
               className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
+            {activePromo && (
+              <p className="text-xs text-gray-500 mt-1">
+                Min: {new Date(activePromo.dateDebut).toLocaleDateString('fr-FR')}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -688,10 +682,16 @@ export default function Booking() {
               value={form.checkout}
               onChange={handleChange}
               type="date"
-              min={form.checkin || new Date().toISOString().split('T')[0]}
+              min={dateConstraints.minCheckout}
+              max={dateConstraints.maxDate || undefined}
               className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
+            {activePromo && (
+              <p className="text-xs text-gray-500 mt-1">
+                Max: {new Date(activePromo.dateFin).toLocaleDateString('fr-FR')}
+              </p>
+            )}
           </div>
         </div>
 
@@ -727,116 +727,6 @@ export default function Booking() {
           </div>
         </div>
 
-        {/* ✅ Code promotionnel avec validation des dates */}
-        {selectedRoom && calculateNights() > 0 && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-3 flex items-center">
-              <Tag className="w-4 h-4 mr-2 text-purple-600" />
-              Code Promotionnel
-            </label>
-            
-            <div className="flex space-x-2 mb-2">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                placeholder="Entrez votre code promo"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                disabled={verifyingPromo}
-              />
-              <button
-                type="button"
-                onClick={verifyPromoCode}
-                disabled={verifyingPromo || !promoCode}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center space-x-2"
-              >
-                {verifyingPromo ? (
-                  <>
-                    <Loader className="w-4 h-4 animate-spin" />
-                    <span>Vérification...</span>
-                  </>
-                ) : (
-                  <>
-                    <Tag className="w-4 h-4" />
-                    <span>Appliquer</span>
-                  </>
-                )}
-              </button>
-            </div>
-            
-            {/* Message d'erreur ou avertissement */}
-            {promoError && (
-              <div className={`text-sm flex items-center mt-1 ${
-                promoVerification?.success ? 'text-orange-600' : 'text-red-600'
-              }`}>
-                <AlertCircle className="w-4 h-4 mr-1" />
-                {promoError}
-              </div>
-            )}
-            
-            {/* Affichage de la réduction appliquée */}
-            {promoVerification?.success && (
-              <div className={`border rounded-lg p-3 mt-2 ${
-                promoVerification.codePromo.isValidForDates === false 
-                  ? 'bg-orange-50 border-orange-200' 
-                  : 'bg-green-50 border-green-200'
-              }`}>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className={`font-medium flex items-center ${
-                      promoVerification.codePromo.isValidForDates === false 
-                        ? 'text-orange-800' 
-                        : 'text-green-800'
-                    }`}>
-                      <CheckCircle className={`w-4 h-4 mr-2 ${
-                        promoVerification.codePromo.isValidForDates === false 
-                          ? 'text-orange-600' 
-                          : 'text-green-600'
-                      }`} />
-                      {promoVerification.codePromo.description}
-                    </div>
-                    <div className={`text-sm mt-1 ${
-                      promoVerification.codePromo.isValidForDates === false 
-                        ? 'text-orange-600' 
-                        : 'text-green-600'
-                    }`}>
-                      {promoVerification.codePromo.type === 'percentage' 
-                        ? `${promoVerification.codePromo.value}% de réduction`
-                        : `${formatPrice(promoVerification.codePromo.value)} de réduction`
-                      }
-                      {promoVerification.codePromo.isValidForDates === false && (
-                        <span className="block text-xs mt-1">
-                          ⚠️ Valable du {new Date(promoVerification.codePromo.dateDebut).toLocaleDateString('fr-FR')} au {new Date(promoVerification.codePromo.dateFin).toLocaleDateString('fr-FR')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`font-bold text-lg ${
-                      promoVerification.codePromo.isValidForDates === false 
-                        ? 'text-orange-800' 
-                        : 'text-green-800'
-                    }`}>
-                      -{formatPrice(promoVerification.codePromo.economie)}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={removePromoCode}
-                      className={`text-sm mt-1 ${
-                        promoVerification.codePromo.isValidForDates === false 
-                          ? 'text-orange-600 hover:text-orange-800' 
-                          : 'text-green-600 hover:text-green-800'
-                      }`}
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Options de paiement */}
         {calculateNights() > 0 && selectedRoom && (
           <div className="mb-6">
@@ -856,7 +746,7 @@ export default function Booking() {
                 <div className="flex-1">
                   <div className="font-medium text-gray-900">Payer la première nuit seulement</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    Sécurisez votre réservation en payant seulement la première nuit ({formatPrice(selectedRoom.price)})
+                    Sécurisez votre réservation en payant seulement la première nuit ({formatPrice(activePromo ? activePromo.prixReduit : selectedRoom.price)})
                   </div>
                 </div>
               </label>
@@ -930,7 +820,7 @@ export default function Booking() {
           />
         </div>
 
-        {/* Récapitulatif */}
+        {/* ✅ RÉCAPITULATIF SIMPLIFIÉ ET COHÉRENT */}
         {calculateNights() > 0 && selectedRoom && (
           <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
             <h3 className="font-semibold mb-3 text-blue-900">Récapitulatif</h3>
@@ -939,10 +829,30 @@ export default function Booking() {
                 <span className="text-gray-700">Chambre:</span>
                 <span className="font-medium">{selectedRoom.name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-700">Prix par nuit:</span>
-                <span className="font-medium">{formatPrice(selectedRoom.price)}</span>
-              </div>
+              
+              {/* ✅ AFFICHAGE COHÉRENT : PRIX PROMO OU NORMAL */}
+              {activePromo ? (
+                <>
+                  <div className="flex justify-between text-gray-400">
+                    <span>Prix original:</span>
+                    <span className="line-through">{formatPrice(selectedRoom.price)}/nuit</span>
+                  </div>
+                  <div className="flex justify-between text-green-600">
+                    <span>Prix promo:</span>
+                    <span className="font-medium">{formatPrice(activePromo.prixReduit)}/nuit</span>
+                  </div>
+                  <div className="flex justify-between text-green-600 text-xs">
+                    <span>Économie:</span>
+                    <span className="font-medium">-{formatPrice(activePromo.economie)}/nuit</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-gray-700">Prix par nuit:</span>
+                  <span className="font-medium">{formatPrice(selectedRoom.price)}</span>
+                </div>
+              )}
+              
               <div className="flex justify-between">
                 <span className="text-gray-700">Nuits totales:</span>
                 <span className="font-medium">{calculateNights()}</span>
@@ -952,36 +862,18 @@ export default function Booking() {
                 <span className="font-medium">{getPaymentOptionDescription()}</span>
               </div>
               
-              {/* Affichage de la réduction dans le récapitulatif */}
-              {promoVerification?.success && (
-                <>
-                  <div className={`flex justify-between ${
-                    promoVerification.codePromo.isValidForDates === false ? 'text-orange-600' : 'text-green-600'
-                  }`}>
-                    <span>Réduction:</span>
-                    <span className="font-medium">-{formatPrice(promoVerification.codePromo.economie)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-500 text-xs">
-                    <span>Code promo:</span>
-                    <span className="font-medium">{promoCode}</span>
-                  </div>
-                  {promoVerification.codePromo.isValidForDates === false && (
-                    <div className="text-orange-600 text-xs bg-orange-50 p-2 rounded border border-orange-200">
-                      ⚠️ Ce code promo n'est pas valable pour les dates sélectionnées
-                    </div>
-                  )}
-                </>
+              {/* ✅ INDICATION PROMO APPLIQUÉE */}
+              {activePromo && (
+                <div className="flex justify-between text-green-600 text-xs">
+                  <span>Code promo appliqué:</span>
+                  <span className="font-medium">{activePromo.codePromo}</span>
+                </div>
               )}
               
               <div className="flex justify-between text-lg font-bold border-t border-blue-300 pt-2 mt-2">
                 <span className="text-blue-900">Montant à payer:</span>
                 <span className="text-blue-600">
                   {formatPrice(calculateFinalAmount())}
-                  {promoVerification?.success && promoVerification.codePromo.isValidForDates !== false && (
-                    <span className="text-sm text-gray-500 line-through ml-2">
-                      {formatPrice(calculateAmountToPay())}
-                    </span>
-                  )}
                 </span>
               </div>
             </div>
