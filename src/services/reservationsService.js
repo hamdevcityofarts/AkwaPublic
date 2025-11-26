@@ -13,6 +13,7 @@ const reservationsService = {
     return api.get('/reservations')
   },
 
+  // ✅ NOUVEAU: Récupérer une réservation spécifique
   getReservationById: (id) => {
     return api.get(`/reservations/${id}`)
   },
@@ -32,7 +33,12 @@ const reservationsService = {
   // ✅ AFFICHER LE SYMBOLE XAF
   getCurrencySymbol: () => {
     return 'FCFA';
+  },
+
+  // ✅ NOUVEAU: Vérifier si une réservation appartient à l'utilisateur
+  isUserReservation: (reservation, userId) => {
+    return reservation.client && reservation.client._id === userId;
   }
 }
 
-export default reservationsService
+export default reservationsService;

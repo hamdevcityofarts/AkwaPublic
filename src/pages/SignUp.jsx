@@ -1,17 +1,20 @@
 // ========================================
-// src/pages/SignUp.jsx
+// src/pages/SignUp.jsx (CORRIGÉ)
 // ========================================
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { register, clearError } from '../store/slices/authSlice';
 import { User, Mail, Lock, Phone, AlertCircle, Loader, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import api from '../services/api';
 
 const SignUp = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const { isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
+  
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '',
     surname: '',
@@ -24,27 +27,47 @@ const SignUp = () => {
   // Récupérer l'URL de redirection depuis l'état de navigation
   const redirectTo = location.state?.from || '/';
 
+  // Rediriger si déjà authentifié
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(redirectTo || '/booking', { 
+        replace: true,
+        state: { message: 'Compte créé avec succès ! Vous pouvez maintenant effectuer une réservation.' }
+      });
+    }
+  }, [isAuthenticated, navigate, redirectTo]);
+
+  // Nettoyer les erreurs au démontage
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value
     });
-    setError('');
+    // Effacer l'erreur lors de la saisie
+    if (error) {
+      dispatch(clearError());
+    }
   };
 
   const validateForm = () => {
     if (!form.name || !form.surname || !form.email || !form.password) {
-      setError('Tous les champs obligatoires doivent être remplis');
+      dispatch(clearError());
       return false;
     }
 
     if (form.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      dispatch(clearError());
       return false;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      dispatch(clearError());
       return false;
     }
 
@@ -56,38 +79,23 @@ const SignUp = () => {
     
     if (!validateForm()) return;
 
-    setLoading(true);
-    setError('');
-
     try {
-      const response = await api.post('/auth/register', {
+      const userData = {
         name: form.name,
         surname: form.surname,
         email: form.email,
         phone: form.phone,
         password: form.password,
         role: 'client' // Toujours créer comme client
-      });
+      };
+
+      await dispatch(register(userData)).unwrap();
       
-      if (response.data.token) {
-        // Stocker le token
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        // Mettre à jour le header axios
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        
-        // Rediriger vers la page demandée ou booking
-        navigate(redirectTo || '/booking', { 
-          replace: true,
-          state: { message: 'Compte créé avec succès ! Vous pouvez maintenant effectuer une réservation.' }
-        });
-      }
+      // La redirection se fera automatiquement via le useEffect ci-dessus
+      // car isAuthenticated sera mis à true par Redux
     } catch (err) {
+      // L'erreur est déjà gérée par le slice auth
       console.error('❌ Erreur inscription:', err);
-      setError(err.response?.data?.message || 'Erreur lors de l\'inscription');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -105,7 +113,7 @@ const SignUp = () => {
           </div>
 
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center animate-in fade-in-0">
               <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
@@ -124,7 +132,8 @@ const SignUp = () => {
                   value={form.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Doe"
                 />
               </div>
@@ -138,7 +147,8 @@ const SignUp = () => {
                   value={form.surname}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="John"
                 />
               </div>
@@ -156,7 +166,8 @@ const SignUp = () => {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="john.doe@example.com"
               />
             </div>
@@ -172,7 +183,8 @@ const SignUp = () => {
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="+237 XXX XX XX XX"
               />
             </div>
@@ -190,13 +202,15 @@ const SignUp = () => {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -215,7 +229,8 @@ const SignUp = () => {
                 value={form.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="••••••••"
               />
             </div>
@@ -223,10 +238,10 @@ const SignUp = () => {
             {/* Bouton inscription */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <Loader className="w-5 h-5 mr-2 animate-spin" />
                   Création du compte...
@@ -244,7 +259,11 @@ const SignUp = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Vous avez déjà un compte ?{' '}
-              <Link to="/login" state={{ from: redirectTo }} className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link 
+                to="/login" 
+                state={{ from: redirectTo }} 
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
                 Se connecter
               </Link>
             </p>

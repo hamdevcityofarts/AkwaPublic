@@ -1,24 +1,31 @@
-// src/pages/MyReservations.jsx - VERSION COMPLÈTE AVEC RÈGLE 48H
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { fetchUserReservations } from '../store/slices/reservationsSlice'
-import { Calendar, Clock, AlertTriangle, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { refreshUserReservations } from '../store/slices/authSlice'
+import { Calendar, Clock, AlertTriangle, CheckCircle, XCircle, Loader, User } from 'lucide-react'
 import roomsService from '../services/roomsService'
 import api from '../services/api'
 
 export default function MyReservations() {
   const dispatch = useDispatch()
-  const { isAuthenticated, user } = useSelector((state) => state.auth)
-  const { reservations, isLoading: reservationsLoading } = useSelector((state) => state.reservations)
+  const { isAuthenticated, user, reservations: authReservations, reservationsLoading } = useSelector((state) => state.auth)
+  const { reservations: sliceReservations, isLoading: sliceLoading } = useSelector((state) => state.reservations)
+  
+  // ✅ UTILISER LES RÉSERVATIONS DE AUTH SLICE (plus à jour)
+  const reservations = authReservations.length > 0 ? authReservations : sliceReservations;
+  const isLoading = reservationsLoading || sliceLoading;
   
   const [cancelLoading, setCancelLoading] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('🔄 Chargement des réservations pour utilisateur:', user?._id)
+      // ✅ CHARGER DANS LES DEUX SLICES PÊUR COMPATIBILITÉ
       dispatch(fetchUserReservations())
+      dispatch(refreshUserReservations())
     }
-  }, [isAuthenticated, dispatch])
+  }, [isAuthenticated, dispatch, user])
 
   // ✅ FORMATER LE PRIX EN XAF
   const formatPrice = (price) => {
@@ -35,7 +42,6 @@ export default function MyReservations() {
 
   // ✅ VÉRIFIER SI ANNULATION POSSIBLE (48H)
   const canCancelReservation = (reservation) => {
-    // Seules les réservations confirmées ou partiellement payées peuvent être annulées
     if (reservation.status !== 'confirmed' && reservation.status !== 'partially_paid') {
       return { 
         allowed: false, 
@@ -93,7 +99,9 @@ export default function MyReservations() {
       
       if (response.data.success) {
         alert('Réservation annulée avec succès');
-        dispatch(fetchUserReservations()); // Recharger les réservations
+        // ✅ RAFRAÎCHIR LES DEUX SOURCES DE RÉSERVATIONS
+        dispatch(fetchUserReservations())
+        dispatch(refreshUserReservations())
       }
     } catch (error) {
       console.error('❌ Erreur annulation:', error);
@@ -150,6 +158,19 @@ export default function MyReservations() {
     );
   }
 
+  // ✅ AFFICHER LES INFORMATIONS CLIENT (pour debug)
+  const renderClientInfo = (reservation) => {
+    if (reservation.client) {
+      return (
+        <div className="text-xs text-gray-500 mt-1">
+          <User className="w-3 h-3 inline mr-1" />
+          {reservation.client.name} {reservation.client.surname}
+        </div>
+      );
+    }
+    return null;
+  }
+
   // ✅ AFFICHAGE PENDANT CHARGEMENT
   if (!isAuthenticated) {
     return (
@@ -181,6 +202,10 @@ export default function MyReservations() {
           <p className="text-gray-600 mt-1">
             Gérez vos réservations et consultez votre historique
           </p>
+          {/* ✅ DEBUG: Afficher l'ID utilisateur */}
+          <p className="text-xs text-gray-400 mt-1">
+            ID Utilisateur: {user?._id} | {reservations.length} réservation(s)
+          </p>
         </div>
         <div className="text-right">
           <p className="text-sm text-gray-600">Connecté en tant que</p>
@@ -197,7 +222,7 @@ export default function MyReservations() {
         </div>
       )}
       
-      {reservationsLoading ? (
+      {isLoading ? (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Chargement de vos réservations...</p>
@@ -231,6 +256,8 @@ export default function MyReservations() {
                       <p className="text-sm text-gray-500 font-mono mt-1">
                         #{reservation._id}
                       </p>
+                      {/* ✅ AFFICHER INFO CLIENT */}
+                      {renderClientInfo(reservation)}
                     </div>
                     {getStatusBadge(reservation.status)}
                   </div>

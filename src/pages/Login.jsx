@@ -1,15 +1,18 @@
-// src/pages/Login.jsx
+// src/pages/Login.jsx (CORRIGÉ)
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, clearError } from '../store/slices/authSlice';
 import { Mail, Lock, AlertCircle, Loader, Eye, EyeOff } from 'lucide-react';
-import api from '../services/api';
 
 const Login = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const { isLoading, error, isAuthenticated } = useSelector((state) => state.auth);
+  
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [form, setForm] = useState({
     email: '',
     password: ''
@@ -18,38 +21,43 @@ const Login = () => {
   // Récupérer l'URL de redirection depuis l'état de navigation
   const redirectTo = location.state?.from || '/';
 
+  // Rediriger si déjà authentifié
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, navigate, redirectTo]);
+
+  // Nettoyer les erreurs au démontage
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value
     });
-    setError(''); // Effacer l'erreur lors de la saisie
+    // Effacer l'erreur lors de la saisie
+    if (error) {
+      dispatch(clearError());
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
+    
     try {
-      const response = await api.post('/auth/login', form);
+      const result = await dispatch(login(form)).unwrap();
       
-      if (response.data.token) {
-        // Stocker le token
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        // Mettre à jour le header axios
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        
-        // Rediriger
-        navigate(redirectTo, { replace: true });
-      }
+      // Rediriger après connexion réussie
+      // La redirection se fera automatiquement via le useEffect ci-dessus
+      // car isAuthenticated sera mis à true par Redux
     } catch (err) {
+      // L'erreur est déjà gérée par le slice auth
       console.error('❌ Erreur connexion:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la connexion');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -67,7 +75,7 @@ const Login = () => {
           </div>
 
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center animate-in fade-in-0">
               <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
@@ -92,7 +100,8 @@ const Login = () => {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="votre@email.com"
               />
             </div>
@@ -110,13 +119,15 @@ const Login = () => {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -126,10 +137,10 @@ const Login = () => {
             {/* Bouton de connexion */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <Loader className="w-5 h-5 mr-2 animate-spin" />
                   Connexion...
@@ -144,7 +155,11 @@ const Login = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Pas encore de compte ?{' '}
-              <Link to="/signup" state={{ from: redirectTo }} className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link 
+                to="/signup" 
+                state={{ from: redirectTo }} 
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
                 Créer un compte
               </Link>
             </p>
@@ -163,4 +178,3 @@ const Login = () => {
 };
 
 export default Login;
-
