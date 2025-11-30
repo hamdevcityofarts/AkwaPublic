@@ -233,28 +233,61 @@ export default function Booking() {
     }
   };
 
-  // FONCTION POUR REDIRIGER VERS CYBERSOURCE
-  const redirectToCyberSource = (paymentData) => {
-    console.log('🚀 Redirection vers CyberSource...', paymentData);
+// FONCTION POUR REDIRIGER VERS CYBERSOURCE - VERSION CORRIGÉE ET SÉCURISÉE
+const redirectToCyberSource = (paymentData) => {
+  console.log('🚀 Redirection vers CyberSource...', paymentData);
+  
+  try {
+    // ✅ VALIDATION COMPLÈTE DES DONNÉES
+    if (!paymentData) {
+      throw new Error('Aucune donnée de paiement reçue');
+    }
     
+    if (!paymentData.form_data || typeof paymentData.form_data !== 'object') {
+      throw new Error('Données de formulaire manquantes ou invalides');
+    }
+    
+    if (!paymentData.form_action) {
+      throw new Error('URL de redirection manquante');
+    }
+    
+    // Vérifier que form_data n'est pas vide
+    const formDataKeys = Object.keys(paymentData.form_data);
+    if (formDataKeys.length === 0) {
+      throw new Error('Aucun champ de formulaire trouvé');
+    }
+    
+    console.log(`📋 ${formDataKeys.length} champs de formulaire détectés`);
+
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = paymentData.form_action;
     form.style.display = 'none';
     
-    Object.keys(paymentData.form_data).forEach(key => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = paymentData.form_data[key];
-      form.appendChild(input);
+    // ✅ BOUCLE SÉCURISÉE avec gestion d'erreur
+    formDataKeys.forEach(key => {
+      const value = paymentData.form_data[key];
+      
+      if (value != null) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value.toString();
+        form.appendChild(input);
+        console.log(`🔹 Champ ajouté: ${key} = ${value}`);
+      }
     });
     
     document.body.appendChild(form);
     console.log('📤 Soumission du formulaire CyberSource...');
     form.submit();
-  };
-
+    
+  } catch (error) {
+    console.error('❌ Erreur lors de la redirection CyberSource:', error);
+    setError(`Erreur de paiement: ${error.message}. Veuillez utiliser le paiement alternatif.`);
+    setStep(2); // Retour au fallback de paiement local
+  }
+};
   // Étape 1: Créer la réservation sans authentification
   const handleSubmit = async (e) => {
     e.preventDefault();
