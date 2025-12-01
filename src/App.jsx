@@ -16,6 +16,7 @@ import SignUp from './pages/SignUp'
 import PaymentResult from './pages/PaymentResult'
 import PaymentCancel from './pages/PaymentCancel'
 import UserProfile from './pages/UserProfile'
+import ReservationDetails from './pages/ReservationDetails' // Nouvelle importation
 import ChangePassword from './pages/ChangePassword'
 
 export default function App() {
@@ -52,6 +53,15 @@ export default function App() {
               </ProtectedRoute>
             } 
           />
+
+          <Route 
+  path="/reservation/:id" 
+  element={
+    <ProtectedRoute>
+      <ReservationDetails />
+    </ProtectedRoute>
+  } 
+/>
           <Route 
             path="/profile" 
             element={

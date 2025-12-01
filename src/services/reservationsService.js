@@ -38,7 +38,38 @@ const reservationsService = {
   // ✅ NOUVEAU: Vérifier si une réservation appartient à l'utilisateur
   isUserReservation: (reservation, userId) => {
     return reservation.client && reservation.client._id === userId;
-  }
+  },
+
+ // Dans reservationsService.js, ajoutez ces méthodes :
+
+// 📄 MÉTHODES DE REÇU
+getReservationReceipt: (id) => {
+  return api.get(`/reservations/${id}/receipt`, {
+    responseType: 'blob',
+    headers: {
+      'Accept': 'text/html, application/pdf'
+    }
+  })
+},
+
+getReceiptDownload: (id) => {
+  return api.get(`/reservations/${id}/receipt/download`, {
+    responseType: 'blob'
+  })
+},
+
+getReceiptUrl: (id) => {
+  return api.get(`/reservations/${id}/receipt/url`)
+},
+
+// 📊 MÉTHODES DE STATISTIQUES
+getReservationStats: () => {
+  return api.get('/reservations/stats/overview')
+},
+
+getPromoCodeStats: () => {
+  return api.get('/reservations/stats/promo-codes')
+}
 }
 
 export default reservationsService;

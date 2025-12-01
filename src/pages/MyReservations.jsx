@@ -5,6 +5,7 @@ import { refreshUserReservations } from '../store/slices/authSlice'
 import { Calendar, Clock, AlertTriangle, CheckCircle, XCircle, Loader, User } from 'lucide-react'
 import roomsService from '../services/roomsService'
 import api from '../services/api'
+import { useNavigate } from 'react-router-dom' // Ajoutez cette importation
 
 export default function MyReservations() {
   const dispatch = useDispatch()
@@ -17,6 +18,8 @@ export default function MyReservations() {
   
   const [cancelLoading, setCancelLoading] = useState(null)
   const [error, setError] = useState(null)
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -364,9 +367,12 @@ export default function MyReservations() {
                       )}
                       
                       {/* Bouton détails */}
-                      <button className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-200">
-                        Voir détails
-                      </button>
+                     <button 
+  onClick={() => navigate(`/reservation/${reservation._id}`)}
+  className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-200"
+>
+  Voir détails
+</button>
                     </div>
                   </div>
                 </div>
