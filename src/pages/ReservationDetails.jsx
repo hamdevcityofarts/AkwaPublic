@@ -169,7 +169,7 @@ export default function ReservationDetails() {
         </head>
         <body>
           <div class="header">
-            <div class="hotel-name">HOTEL NOGA</div>
+            <div class="hotel-name"> Grand Hotel Aeroport </div>
             <div class="receipt-title">REÇU DE RÉSERVATION</div>
             <div>${formatDateTime(new Date())}</div>
           </div>
