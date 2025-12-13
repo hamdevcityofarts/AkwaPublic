@@ -176,16 +176,16 @@ export default function Navbar() {
 
             {/* Déconnexion */}
             <div className="border-t border-gray-100/50 pt-2 mt-2">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 w-full px-5 py-3 text-red-600 hover:bg-red-50/80 transition-all duration-200 rounded-xl mx-2 group"
-              >
-                <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
-                  <LogOut className="w-4 h-4 text-red-600" />
-                </div>
-                <span className="font-medium">Déconnexion</span>
-              </button>
-            </div>
+  <button
+    onClick={handleLogout}
+    className="flex items-center gap-3 w-full px-5 py-3 text-red-600 hover:bg-red-50/80 transition-all duration-200 rounded-xl group"
+  >
+    <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+      <LogOut className="w-4 h-4 text-red-600" />
+    </div>
+    <span className="font-medium">Déconnexion</span>
+  </button>
+</div>
           </div>
         )}
       </div>

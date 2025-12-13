@@ -168,14 +168,12 @@ export default function Booking() {
     return 0;
   };
 
-  // ✅ CALCULER LE MONTANT SELON L'OPTION CHOISIE (PRIX PROMO SI ACTIF)
-  const calculateAmountToPay = () => {
+  // ✅ CALCULER LE MONTANT DE BASE (SANS PROMO)
+  const calculateBaseAmount = () => {
     if (!selectedRoom) return 0;
     
     const totalNights = calculateNights();
-    
-    // ✅ PRIX DE BASE : PROMO SI ACTIVE, SINON PRIX NORMAL
-    const basePricePerNight = activePromo ? activePromo.prixReduit : selectedRoom.price;
+    const basePricePerNight = selectedRoom.price;
 
     switch (paymentOption) {
       case 'first-night':
@@ -191,9 +189,35 @@ export default function Booking() {
     }
   };
 
-  // ✅ CALCULER LE MONTANT FINAL (TOUJOURS AVEC PROMO SI ACTIVE)
+  // ✅ CALCULER LE MONTANT AVEC RÉDUCTION (SI PROMO ACTIVE)
+  const calculateAmountWithPromo = () => {
+    if (!selectedRoom || !activePromo) return 0;
+    
+    const totalNights = calculateNights();
+    // Utiliser le prix réduit de la promo
+    const promoPricePerNight = activePromo.prixReduit;
+
+    switch (paymentOption) {
+      case 'first-night':
+        return promoPricePerNight;
+      
+      case 'partial':
+        const nightsToPay = Math.min(partialNights, totalNights);
+        return promoPricePerNight * nightsToPay;
+      
+      case 'full':
+      default:
+        return promoPricePerNight * totalNights;
+    }
+  };
+
+  // ✅ CALCULER LE MONTANT FINAL (AVEC PROMO SI ACTIVE)
   const calculateFinalAmount = () => {
-    return Math.round(calculateAmountToPay());
+    if (activePromo) {
+      return Math.round(calculateAmountWithPromo());
+    } else {
+      return Math.round(calculateBaseAmount());
+    }
   };
 
   // Obtenir le nombre de nuits à payer
@@ -233,62 +257,63 @@ export default function Booking() {
     }
   };
 
-// FONCTION POUR REDIRIGER VERS CYBERSOURCE - VERSION CORRIGÉE ET SÉCURISÉE
-const redirectToCyberSource = (paymentData) => {
-  console.log('🚀 Redirection vers CyberSource...', paymentData);
-  
-  try {
-    // ✅ VALIDATION COMPLÈTE DES DONNÉES
-    if (!paymentData) {
-      throw new Error('Aucune donnée de paiement reçue');
-    }
+  // FONCTION POUR REDIRIGER VERS CYBERSOURCE - VERSION CORRIGÉE ET SÉCURISÉE
+  const redirectToCyberSource = (paymentData) => {
+    console.log('🚀 Redirection vers CyberSource...', paymentData);
     
-    if (!paymentData.form_data || typeof paymentData.form_data !== 'object') {
-      throw new Error('Données de formulaire manquantes ou invalides');
-    }
-    
-    if (!paymentData.form_action) {
-      throw new Error('URL de redirection manquante');
-    }
-    
-    // Vérifier que form_data n'est pas vide
-    const formDataKeys = Object.keys(paymentData.form_data);
-    if (formDataKeys.length === 0) {
-      throw new Error('Aucun champ de formulaire trouvé');
-    }
-    
-    console.log(`📋 ${formDataKeys.length} champs de formulaire détectés`);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = paymentData.form_action;
-    form.style.display = 'none';
-    
-    // ✅ BOUCLE SÉCURISÉE avec gestion d'erreur
-    formDataKeys.forEach(key => {
-      const value = paymentData.form_data[key];
-      
-      if (value != null) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value.toString();
-        form.appendChild(input);
-        console.log(`🔹 Champ ajouté: ${key} = ${value}`);
+    try {
+      // ✅ VALIDATION COMPLÈTE DES DONNÉES
+      if (!paymentData) {
+        throw new Error('Aucune donnée de paiement reçue');
       }
-    });
-    
-    document.body.appendChild(form);
-    console.log('📤 Soumission du formulaire CyberSource...');
-    form.submit();
-    
-  } catch (error) {
-    console.error('❌ Erreur lors de la redirection CyberSource:', error);
-    setError(`Erreur de paiement: ${error.message}. Veuillez utiliser le paiement alternatif.`);
-    setStep(2); // Retour au fallback de paiement local
-  }
-};
-  // Étape 1: Créer la réservation sans authentification
+      
+      if (!paymentData.form_data || typeof paymentData.form_data !== 'object') {
+        throw new Error('Données de formulaire manquantes ou invalides');
+      }
+      
+      if (!paymentData.form_action) {
+        throw new Error('URL de redirection manquante');
+      }
+      
+      // Vérifier que form_data n'est pas vide
+      const formDataKeys = Object.keys(paymentData.form_data);
+      if (formDataKeys.length === 0) {
+        throw new Error('Aucun champ de formulaire trouvé');
+      }
+      
+      console.log(`📋 ${formDataKeys.length} champs de formulaire détectés`);
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = paymentData.form_action;
+      form.style.display = 'none';
+      
+      // ✅ BOUCLE SÉCURISÉE avec gestion d'erreur
+      formDataKeys.forEach(key => {
+        const value = paymentData.form_data[key];
+        
+        if (value != null) {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value.toString();
+          form.appendChild(input);
+          console.log(`🔹 Champ ajouté: ${key} = ${value}`);
+        }
+      });
+      
+      document.body.appendChild(form);
+      console.log('📤 Soumission du formulaire CyberSource...');
+      form.submit();
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la redirection CyberSource:', error);
+      setError(`Erreur de paiement: ${error.message}. Veuillez utiliser le paiement alternatif.`);
+      setStep(2); // Retour au fallback de paiement local
+    }
+  };
+
+  // ✅ ÉTAPE 1: CRÉER LA RÉSERVATION SANS AUTHENTIFICATION
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -338,29 +363,42 @@ const redirectToCyberSource = (paymentData) => {
     try {
       console.log('🔹 Début création réservation publique...');
 
-      // Données de réservation avec code promo
-      const reservationData = {
-        chambreId: form.roomId,
-        checkIn: form.checkin,
-        checkOut: form.checkout,
-        adults: parseInt(form.adults),
-        children: parseInt(form.children),
-        guests: parseInt(form.adults) + parseInt(form.children),
-        specialRequests: form.specialRequests,
-        paymentMethod: 'card',
-        paymentOption: paymentOption,
-        nightsToPay: getNightsToPay(),
-        // ✅ INCLURE LE CODE PROMO SEULEMENT SI ACTIF
-        codePromo: activePromo ? activePromo.codePromo : undefined,
-        clientInfo: {
-          name: form.name,
-          surname: form.surname,
-          email: form.email,
-          phone: form.phone
-        }
-      };
+      // ✅ CALCULER LE MONTANT FINAL (AVEC OU SANS PROMO)
+      const finalAmount = calculateFinalAmount();
 
-      console.log('🔹 Données réservation:', reservationData);
+      // Données de réservation avec code promo et prix final
+     // Modifiez seulement la section de création de réservation (lignes 395-396)
+
+// RECHERCHEZ CETTE SECTION DANS VOTRE FICHIER Booking.jsx (vers la ligne 395) :
+const reservationData = {
+  chambreId: form.roomId,
+  checkIn: form.checkin,
+  checkOut: form.checkout,
+  adults: parseInt(form.adults),
+  children: parseInt(form.children),
+  guests: parseInt(form.adults) + parseInt(form.children),
+  specialRequests: form.specialRequests,
+  paymentMethod: 'card',
+  paymentOption: paymentOption,
+  nightsToPay: getNightsToPay(),
+  // ✅ INCLURE LE CODE PROMO SEULEMENT SI ACTIF
+  codePromo: activePromo ? activePromo.codePromo : undefined,
+  // ✅ INCLURE LE PRIX FINAL (AVEC RÉDUCTION SI PROMO)
+  prixTotal: finalAmount, // ← ASSUREZ-VOUS QUE C'EST BIEN LÀ
+  clientInfo: {
+    name: form.name,
+    surname: form.surname,
+    email: form.email,
+    phone: form.phone
+  }
+};
+
+console.log('🔹 Données réservation envoyées au backend:', {
+  prixTotal: finalAmount,
+  codePromo: activePromo ? activePromo.codePromo : 'AUCUN',
+  paymentOption: paymentOption,
+  nightsToPay: getNightsToPay()
+});
 
       const reservationResponse = await fetch(import.meta.env.VITE_API_BASE_URL + '/reservations/public', {
         method: 'POST',
@@ -382,7 +420,7 @@ const redirectToCyberSource = (paymentData) => {
       setReservation(reservationResult.reservation);
       
       if (reservationResult.payment) {
-        console.log('💰 Données de paiement reçues:', reservationResult.payment);
+        console.log('💰 Données de paiement reçues (montant envoyé):', reservationResult.payment.form_data?.amount);
         setPaymentData(reservationResult.payment);
         
         setTimeout(() => {
