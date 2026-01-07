@@ -1,4 +1,4 @@
-// ✅ src/components/Navbar.jsx (VERSION TRANSPARENTE)
+// ✅ src/components/Navbar.jsx (VERSION TRANSPARENTE) - AVEC POLITIQUE DE CONFIDENTIALITÉ
 import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,6 +14,7 @@ import {
   X,
   Star,
   Crown,
+  Shield,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -176,16 +177,16 @@ export default function Navbar() {
 
             {/* Déconnexion */}
             <div className="border-t border-gray-100/50 pt-2 mt-2">
-  <button
-    onClick={handleLogout}
-    className="flex items-center gap-3 w-full px-5 py-3 text-red-600 hover:bg-red-50/80 transition-all duration-200 rounded-xl group"
-  >
-    <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
-      <LogOut className="w-4 h-4 text-red-600" />
-    </div>
-    <span className="font-medium">Déconnexion</span>
-  </button>
-</div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full px-5 py-3 text-red-600 hover:bg-red-50/80 transition-all duration-200 rounded-xl group"
+              >
+                <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+                  <LogOut className="w-4 h-4 text-red-600" />
+                </div>
+                <span className="font-medium">Déconnexion</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -239,7 +240,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation Desktop Stylisée */}
+        {/* Navigation Desktop Stylisée - AJOUT DU LIEN CONFIDENTIALITÉ */}
         <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
           <NavLinkItem to="/rooms">
             Chambres/Suites
@@ -249,6 +250,10 @@ export default function Navbar() {
           </NavLinkItem>
           <NavLinkItem to="/contact">
             Contact
+          </NavLinkItem>
+          {/* NOUVEAU LIEN POUR LA POLITIQUE DE CONFIDENTIALITÉ */}
+          <NavLinkItem to="/privacy-policy">
+            Condition Generales
           </NavLinkItem>
         </nav>
 
@@ -338,7 +343,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Contenu du menu */}
+            {/* Contenu du menu - AJOUT DU LIEN CONFIDENTIALITÉ DANS LE MENU MOBILE */}
             <div className="container mx-auto px-6 py-6">
               <div className="space-y-2">
                 <MobileNavLink to="/rooms" onClick={closeMobileMenu}>
@@ -349,6 +354,14 @@ export default function Navbar() {
                 </MobileNavLink>
                 <MobileNavLink to="/contact" onClick={closeMobileMenu}>
                   Contact
+                </MobileNavLink>
+                {/* NOUVEAU LIEN POUR LA POLITIQUE DE CONFIDENTIALITÉ DANS LE MENU MOBILE */}
+                <MobileNavLink 
+                  to="/privacy-policy" 
+                  onClick={closeMobileMenu}
+                  icon={<Shield className="w-4 h-4" />}
+                >
+                  Conditions generales
                 </MobileNavLink>
 
                 {isAuthenticated ? (

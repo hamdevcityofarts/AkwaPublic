@@ -18,6 +18,8 @@ import PaymentCancel from './pages/PaymentCancel'
 import UserProfile from './pages/UserProfile'
 import ReservationDetails from './pages/ReservationDetails' // Nouvelle importation
 import ChangePassword from './pages/ChangePassword'
+import PrivacyPolicy  from './pages/PrivacyPolicy'
+
 
 export default function App() {
   return (
@@ -35,6 +37,7 @@ export default function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/payment/result" element={<PaymentResult />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />
+           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           
           {/* Routes protégées */}
           <Route 
