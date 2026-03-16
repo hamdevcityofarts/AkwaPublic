@@ -272,8 +272,57 @@ const Section4Content = () => (
 
     <h3 className="text-lg font-bold text-amber-800">4.2 Dégradations</h3>
     <p>Le Client est responsable de toutes les éventuelles dégradations causées, ainsi que de tout objet ou mobilier manquant. En cas de dégradation, GRAND HOTEL ADAMAOUA procédera à une refacturation selon le barème annexé, dans un délai de 48 heures suivant le départ.</p>
+    
     <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-      <p className="font-medium text-red-800"><span className="font-bold">Important :</span> L'hôtel est non-fumeur. Le fait de fumer dans les parties communes et/ou les chambres est constitutif d'une dégradation et entraînera une facturation selon le barème applicable.</p>
+      <p className="font-medium text-red-800"><span className="font-bold">Important :</span> L'hôtel est non-fumeur. Le fait de fumer dans les parties communes et/ou les chambres est constitutif d'une dégradation et entraînera une facturation selon le barème applicable (50 000 à 75 000 FCFA pour désodorisation profonde).</p>
+    </div>
+
+    <h3 className="text-lg font-bold text-amber-800">4.2.1 Procédure en cas de dégradation ou de vol</h3>
+    <div className="bg-gray-50 p-5 rounded-lg space-y-4">
+      <h4 className="font-bold text-amber-700">A. Constat et inventaire</h4>
+      <p>Au moment du départ (check-out) ou lors du passage du service de ménage, un inventaire est réalisé par le personnel de GRAND HOTEL ADAMAOUA. Si un dommage ou un vol est constaté :</p>
+      <ul className="list-disc pl-6 space-y-2">
+        <li><span className="font-medium">Dommages mineurs :</span> Taches indélébiles sur le linge de maison, vaisselle brisée, petits accrocs au mobilier. Un forfait de nettoyage spécialisé ou de remplacement est appliqué conformément au barème annexé aux présentes Conditions Générales.</li>
+        <li><span className="font-medium">Dommages majeurs ou vol :</span> Téléviseur cassé, disparition d'équipements (peignoirs, oreillers, décorations), mobilier dégradé de façon significative. La direction de l'hôtel évalue le coût de remplacement à neuf ou de réparation professionnelle, facturé au Client selon le barème applicable.</li>
+      </ul>
+
+      <h4 className="font-bold text-amber-700 mt-4">B. Modes de recouvrement</h4>
+      <p>GRAND HOTEL ADAMAOUA utilise principalement deux leviers pour obtenir réparation :</p>
+      <ul className="list-disc pl-6 space-y-2">
+        <li><span className="font-medium">La pré-autorisation bancaire (caution) :</span> Lors de son arrivée, le Client accepte qu'une somme soit bloquée sur sa carte bancaire à titre de garantie. En cas de dégradation constatée, le montant des réparations est directement débité sur cette caution, dans la limite du montant autorisé.</li>
+        <li><span className="font-medium">La facturation directe :</span> Si aucun dépôt de garantie n'a été prélevé, s'il est insuffisant, ou en cas de paiement en espèces, l'hôtel ajoute les frais correspondants sur la facture finale du Client. Le Client s'engage à régler cette somme avant son départ ou, à défaut, dans un délai de 7 jours suivant la réception de la facture.</li>
+      </ul>
+
+      <h4 className="font-bold text-amber-700 mt-4">C. Barème indicatif</h4>
+      <p>La grille tarifaire complète des dédommagements est annexée aux présentes Conditions Générales et consultable à la réception de l'hôtel. À titre indicatif :</p>
+      <div className="overflow-x-auto my-3">
+        <table className="min-w-full bg-white border border-gray-300">
+          <thead className="bg-amber-100">
+            <tr>
+              <th className="py-2 px-4 text-left">Type de dégradation</th>
+              <th className="py-2 px-4 text-left">Fourchette indicative (FCFA)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-300">
+            <tr><td className="py-2 px-4">Perte de carte magnétique/clé</td><td className="py-2 px-4">5 000 - 15 000</td></tr>
+            <tr><td className="py-2 px-4">Peignoir emporté</td><td className="py-2 px-4">25 000 - 40 000</td></tr>
+            <tr><td className="py-2 px-4">Infraction à l'interdiction de fumer</td><td className="py-2 px-4">50 000 - 75 000</td></tr>
+            <tr><td className="py-2 px-4">Tache sur moquette ou linge de maison</td><td className="py-2 px-4">15 000 - 30 000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4 className="font-bold text-amber-700 mt-4">D. Recours légaux</h4>
+      <p>En cas de dégradations volontaires importantes ou de vol manifeste d'équipements de valeur, GRAND HOTEL ADAMAOUA se réserve le droit d'engager des poursuites judiciaires conformément à la législation camerounaise, en sus du débit de la carte bancaire. L'établissement pourra déposer une plainte auprès des autorités compétentes et demander réparation intégrale du préjudice subi devant les tribunaux camerounais.</p>
+
+      <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mt-4">
+        <p className="font-medium text-amber-800 flex items-start">
+          <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <span><span className="font-bold">Recommandation :</span> Il est toujours recommandé de signaler immédiatement tout accident (objet cassé par mégarde, dégât des eaux accidentel) à la réception. La transparence permet souvent de négocier une solution amiable ou de faire jouer votre assurance responsabilité civile personnelle, conformément aux articles 1382 et suivants du Code civil camerounais.</span>
+        </p>
+      </div>
     </div>
 
     <h3 className="text-lg font-bold text-amber-800">4.3 Comportement</h3>
@@ -283,13 +332,13 @@ const Section4Content = () => (
     <p>Si des mineurs occupent des chambres réservées par le Client, au moins une personne majeure doit être présente dans chaque chambre.</p>
 
     <h3 className="text-lg font-bold text-amber-800">4.5 Objets de valeur</h3>
-    <p>Le Client s'engage à déposer dans le coffre-fort de l'hôtel les objets et sommes d'argent dont la valeur est supérieure à 200 000 Francs CFA (adaptation au contexte camerounais).</p>
+    <p>Le Client s'engage à déposer dans le coffre-fort de l'hôtel les objets et sommes d'argent dont la valeur est supérieure à 200 000 Francs CFA.</p>
 
     <h3 className="text-lg font-bold text-amber-800">4.6 Fiche de police</h3>
     <p>Le Client devra remplir une fiche de police lors de son arrivée et présenter une pièce d'identité en cours de validité, conformément à la réglementation camerounaise.</p>
 
     <h3 className="text-lg font-bold text-amber-800">4.7 Accès à l'hôtel</h3>
-    <p>L'accès à l'hôtel est possible 24h/24. En cas de perte de la clé, un double peut être obtenu sur présentation d'une pièce d'identité.</p>
+    <p>L'accès à l'hôtel est possible 24h/24. En cas de perte de la clé, un double peut être obtenu sur présentation d'une pièce d'identité. La perte de la carte magnétique entraînera une facturation selon le barème en vigueur.</p>
 
     <h3 className="text-lg font-bold text-amber-800">4.8 Heure d'arrivée</h3>
     <p>Les chambres peuvent être occupées à compter de 14h00.</p>
