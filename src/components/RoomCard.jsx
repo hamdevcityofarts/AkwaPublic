@@ -1,3 +1,4 @@
+// src/components/RoomCard.jsx — VERSION LUXE HÔTELIÈRE
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Users, MapPin, Bed, Tag, Zap, X, Check, AlertCircle, Bell } from 'lucide-react'
@@ -6,355 +7,340 @@ import ImageSlider from './ImageSlider'
 import roomsService from '../services/roomsService'
 import promoCodesService from '../services/promoCodesService'
 
+// ── Constantes typo (cohérentes Navbar + Home) ──
+const serif = { fontFamily: "'Cormorant Garamond', serif" }
+const sans  = { fontFamily: "'Montserrat', sans-serif" }
+
 const RoomCard = ({ room }) => {
   const navigate = useNavigate()
   const { isAuthenticated } = useSelector((state) => state.auth)
-  const [showPromoInput, setShowPromoInput] = useState(false)
-  const [promoCode, setPromoCode] = useState('')
-  const [verifying, setVerifying] = useState(false)
-  const [promoError, setPromoError] = useState('')
-  const [verifiedPromo, setVerifiedPromo] = useState(null)
-  const [roomPromos, setRoomPromos] = useState([])
-  const [loadingPromos, setLoadingPromos] = useState(false)
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' })
+  const [showPromoInput, setShowPromoInput]   = useState(false)
+  const [promoCode, setPromoCode]             = useState('')
+  const [verifying, setVerifying]             = useState(false)
+  const [promoError, setPromoError]           = useState('')
+  const [verifiedPromo, setVerifiedPromo]     = useState(null)
+  const [roomPromos, setRoomPromos]           = useState([])
+  const [loadingPromos, setLoadingPromos]     = useState(false)
+  const [notification, setNotification]       = useState({ show: false, message: '', type: '' })
 
-  // ✅ AFFICHER UNE NOTIFICATION
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type })
-    setTimeout(() => {
-      setNotification({ show: false, message: '', type: '' })
-    }, 4000)
+    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 4000)
   }
 
-  // ✅ CHARGER LES PROMOS DE LA CHAMBRE AU MONTAGE
   useEffect(() => {
     const loadRoomPromos = async () => {
       if (!room?._id) return
-      
       setLoadingPromos(true)
       try {
         const response = await promoCodesService.getRoomPromos(room._id)
-        if (response.success && response.availablePromos) {
+        if (response.success && response.availablePromos)
           setRoomPromos(response.availablePromos)
-          console.log(`✅ ${response.availablePromos.length} promo(s) chargée(s) pour ${room.name}`)
-        }
       } catch (error) {
         console.error('❌ Erreur chargement promos:', error)
       } finally {
         setLoadingPromos(false)
       }
     }
-
     loadRoomPromos()
   }, [room?._id])
 
-  const getTypeLabel = (type) => {
-    const typeLabels = {
-      'standard': 'Standard',
-      'superior': 'Supérieure', 
-      'deluxe': 'Deluxe',
-      'suite': 'Suite',
-      'family': 'Familiale',
-      'executive': 'Exécutive',
-      'presidential': 'Présidentielle'
-    }
-    return typeLabels[type] || type
-  }
+  const getTypeLabel = (type) => ({
+    standard: 'Standard', superior: 'Supérieure', deluxe: 'Deluxe',
+    suite: 'Suite', family: 'Familiale', executive: 'Exécutive', presidential: 'Présidentielle'
+  }[type] || type)
 
-  // ✅ FORMATER LE PRIX EN XAF
-  const formatPrice = (price) => {
-    return roomsService.formatPrice(price);
-  }
+  const formatPrice  = (price) => roomsService.formatPrice(price)
+  const statusBadge  = roomsService.getStatusBadge(room.status)
+  const hasActivePromos = roomPromos.length > 0
 
-  // ✅ OBTENIR LE BADGE DE STATUT
-  const statusBadge = roomsService.getStatusBadge(room.status);
-
-  // ✅ VÉRIFIER SI LA CHAMBRE A DES CODES PROMO
-  const hasActivePromos = roomPromos.length > 0;
-
-  // ✅ VÉRIFIER LE CODE PROMO - MODIFIÉ POUR PERMETTRE LES PROMOS FUTURES
   const verifyPromoCode = async () => {
-    if (!promoCode.trim()) {
-      setPromoError('Veuillez entrer un code promo')
-      return
-    }
-    
-    setVerifying(true)
-    setPromoError('')
-    
+    if (!promoCode.trim()) { setPromoError('Veuillez entrer un code promo'); return }
+    setVerifying(true); setPromoError('')
     try {
-      // ✅ MODIFICATION : Ne pas envoyer de dates pour la vérification RoomCard
-      // On permet l'application même si la promo commence dans le futur
       const response = await promoCodesService.verifyCodePromo(promoCode, room._id, 1)
-      
       if (response.success) {
-        setVerifiedPromo(response.codePromo)
-        setPromoError('')
-        showNotification(`🎉 Code promo appliqué ! Économie de ${formatPrice(response.codePromo.economie)}`, 'success')
+        setVerifiedPromo(response.codePromo); setPromoError('')
+        showNotification(`🎉 Code appliqué ! Économie de ${formatPrice(response.codePromo.economie)}`, 'success')
       } else {
         setPromoError(response.message || 'Code promo invalide')
         setVerifiedPromo(null)
         showNotification(response.message || 'Code promo invalide', 'error')
       }
     } catch (error) {
-      const errorMessage = error.message || 'Erreur lors de la vérification du code promo'
-      setPromoError(errorMessage)
-      setVerifiedPromo(null)
-      showNotification(errorMessage, 'error')
-    } finally {
-      setVerifying(false)
-    }
+      const msg = error.message || 'Erreur lors de la vérification'
+      setPromoError(msg); setVerifiedPromo(null); showNotification(msg, 'error')
+    } finally { setVerifying(false) }
   }
 
-  // ✅ RÉINITIALISER LE CODE PROMO
   const resetPromoCode = () => {
-    setPromoCode('')
-    setVerifiedPromo(null)
-    setPromoError('')
-    setShowPromoInput(false)
+    setPromoCode(''); setVerifiedPromo(null); setPromoError(''); setShowPromoInput(false)
     showNotification('Code promo retiré', 'info')
   }
 
-  // ✅ GESTION DU CLIC SUR "RÉSERVER" - TRANSMETTRE LE CODE PROMO
   const handleReservationClick = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    // Préparer les données de promo pour la réservation
+    e.preventDefault(); e.stopPropagation()
     const promoData = verifiedPromo ? {
-      codePromo: verifiedPromo.code,
-      prixOriginal: verifiedPromo.prixOriginal,
-      prixReduit: verifiedPromo.prixReduit,
-      economie: verifiedPromo.economie,
-      dateDebut: verifiedPromo.dateDebut,
-      dateFin: verifiedPromo.dateFin
+      codePromo: verifiedPromo.code, prixOriginal: verifiedPromo.prixOriginal,
+      prixReduit: verifiedPromo.prixReduit, economie: verifiedPromo.economie,
+      dateDebut: verifiedPromo.dateDebut, dateFin: verifiedPromo.dateFin
     } : null
-
     if (!isAuthenticated) {
-      navigate('/login', { 
-        state: { 
-          from: `/booking?room=${room._id}`,
-          message: 'Connectez-vous ou créez un compte pour réserver cette chambre',
-          promoData: promoData
-        }
-      })
+      navigate('/login', { state: { from: `/booking?room=${room._id}`, message: 'Connectez-vous pour réserver', promoData } })
     } else {
-      navigate(`/booking?room=${room._id}`, {
-        state: { promoData }
-      })
+      navigate(`/booking?room=${room._id}`, { state: { promoData } })
     }
   }
 
-  // ✅ GESTION DU CLIC SUR LA CARTE (sauf boutons)
   const handleCardClick = (e) => {
-    if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('a')) {
+    if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('a'))
       navigate(`/rooms/${room._id}`)
-    }
   }
 
-  // ✅ GESTION DE LA TOUCHE ENTRÉE DANS LE CHAMP CODE PROMO
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      verifyPromoCode()
-    }
-  }
+  const handleKeyPress = (e) => { if (e.key === 'Enter') verifyPromoCode() }
 
-  // ✅ PRIX À AFFICHER - TOUJOURS LE PRIX NORMAL SAUF SI CODE APPLIQUÉ
-  const displayPrice = verifiedPromo ? verifiedPromo.prixReduit : room.price
+  const displayPrice         = verifiedPromo ? verifiedPromo.prixReduit : room.price
   const displayOriginalPrice = verifiedPromo ? verifiedPromo.prixOriginal : null
 
   return (
-    <div 
-      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer relative"
+    <div
+      className="bg-white rounded-2xl overflow-hidden cursor-pointer relative group
+        border border-gray-100 hover:border-transparent
+        shadow-sm hover:shadow-xl
+        transition-all duration-400 hover:-translate-y-1"
       onClick={handleCardClick}
     >
-      {/* ✅ NOTIFICATION TOAST PERSONNALISÉE */}
+      {/* ── Toast notification ── */}
       {notification.show && (
-        <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg border max-w-sm w-11/12 transition-all duration-300 ${
-          notification.type === 'success' 
-            ? 'bg-green-50 border-green-200 text-green-800' 
-            : notification.type === 'error'
-            ? 'bg-red-50 border-red-200 text-red-800'
-            : 'bg-blue-50 border-blue-200 text-blue-800'
-        }`}>
+        <div
+          style={sans}
+          className={`absolute top-3 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-lg
+            border max-w-xs w-11/12 transition-all duration-300 text-xs font-medium
+            ${notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800'
+              : notification.type === 'error'  ? 'bg-red-50 border-red-200 text-red-800'
+              : 'bg-blue-50 border-blue-200 text-blue-800'}`}
+        >
           <div className="flex items-center gap-2">
-            <Bell className="w-4 h-4 flex-shrink-0" />
-            <span className="text-sm font-medium">{notification.message}</span>
+            <Bell className="w-3.5 h-3.5 flex-shrink-0" />
+            {notification.message}
           </div>
         </div>
       )}
 
-      {/* ✅ SLIDER D'IMAGES */}
-      <div className="relative h-56">
+      {/* ── Slider images ── */}
+      <div className="relative h-52 overflow-hidden">
         <ImageSlider images={room.images} className="h-full" />
-        
-        {/* Badge type de chambre */}
+
+        {/* Overlay dégradé bas */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+
+        {/* Badge type */}
         <div className="absolute bottom-3 left-3 z-10">
-          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+          <span
+            style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-full shadow-md"
+          >
             {getTypeLabel(room.type)}
           </span>
         </div>
 
-        {/* ✅ BADGE STATUT */}
+        {/* Badge statut */}
         <div className="absolute top-3 left-3 z-10">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold border shadow-sm ${statusBadge.color}`}>
+          <span
+            style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}
+            className={`px-2.5 py-1 rounded-full border ${statusBadge.color}`}
+          >
             {statusBadge.label}
           </span>
         </div>
 
-        {/* ✅ BADGE PROMO SIMPLE - UNIQUEMENT LE BADGE */}
+        {/* Badge promo */}
         {hasActivePromos && (
           <div className="absolute top-3 right-3 z-10">
-            <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg flex items-center">
-              <Zap className="w-3 h-3 mr-1" />
-              PROMO
+            <span
+              style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase" }}
+              className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-2.5 py-1 rounded-full shadow-md flex items-center gap-1"
+            >
+              <Zap className="w-3 h-3" />
+              Promo
             </span>
           </div>
         )}
 
-        {/* Badge nombre d'images */}
+        {/* Compteur photos */}
         {room.images && room.images.length > 1 && (
-          <div className="absolute bottom-3 right-3 z-10 bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+          <div
+            style={{ ...sans, fontSize: "9px", letterSpacing: "0.10em" }}
+            className="absolute bottom-3 right-3 z-10 bg-black/55 text-white px-2 py-1 rounded-full"
+          >
             {room.images.length} photos
           </div>
         )}
       </div>
-      
+
+      {/* ── Corps de la carte ── */}
       <div className="p-5">
-        {/* Titre et prix */}
+
+        {/* Nom + prix */}
         <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <h3 className="text-xl font-semibold text-gray-900 mb-1">{room.name}</h3>
-            <p className="text-sm text-gray-500">#{room.number}</p>
+          <div className="flex-1 min-w-0 pr-3">
+            <h3
+              style={{ ...serif, fontWeight: 500, fontSize: "20px", letterSpacing: "0.03em" }}
+              className="text-gray-900 leading-tight mb-0.5 truncate"
+            >
+              {room.name}
+            </h3>
+            {/* Trait doré sous le titre */}
+            <div style={{ width: 20, height: 1, background: "rgba(212,160,51,0.45)", marginBottom: 4 }} />
+            <p style={{ ...sans, fontSize: "10px", letterSpacing: "0.14em", color: "#9ca3af" }}>
+              #{room.number}
+            </p>
           </div>
-          <div className="text-right ml-3">
-            {/* ✅ AFFICHAGE PRIX UNIFORME - PAS DE PRIX BARRÉ SAUF SI CODE APPLIQUÉ */}
+
+          {/* Prix */}
+          <div className="text-right flex-shrink-0">
             {verifiedPromo ? (
-              <div className="text-right">
-                <div className="text-sm text-gray-400 line-through mb-1">
+              <>
+                <div
+                  style={{ ...sans, fontSize: "11px", color: "#9ca3af", textDecoration: "line-through" }}
+                  className="mb-0.5"
+                >
                   {formatPrice(displayOriginalPrice)}
                 </div>
-                <div className="text-2xl font-bold text-orange-600">
+                <div style={{ ...serif, fontWeight: 400, fontSize: "24px", color: "#ea580c", lineHeight: 1 }}>
                   {formatPrice(displayPrice)}
                 </div>
-                <div className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full mt-1">
-                  Économie {formatPrice(verifiedPromo.economie)}
+                <div
+                  style={{ ...sans, fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase" }}
+                  className="mt-1 px-2 py-1 bg-green-50 text-green-700 rounded-full inline-block"
+                >
+                  -{formatPrice(verifiedPromo.economie)}
                 </div>
-              </div>
+              </>
             ) : (
-              <div>
-                <div className="text-2xl font-bold text-blue-600">
+              <>
+                <div style={{ ...serif, fontWeight: 400, fontSize: "26px", color: "#2563eb", lineHeight: 1 }}>
                   {formatPrice(displayPrice)}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">par nuit</div>
-              </div>
+                <div style={{ ...sans, fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9ca3af" }} className="mt-1">
+                  par nuit
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* Informations */}
-        <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{room.capacity} pers.</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Bed className="w-4 h-4" />
-            <span className="capitalize">{room.bedType?.replace('_', ' ')}</span>
-          </div>
-          {room.size && (
-            <div className="flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
-              <span>{room.size}</span>
+        {/* Infos capacité / lit / taille */}
+        <div className="flex items-center gap-4 mb-4">
+          {[
+            { icon: <Users className="w-3.5 h-3.5" />, label: `${room.capacity} pers.` },
+            { icon: <Bed className="w-3.5 h-3.5" />, label: room.bedType?.replace('_', ' ') },
+            ...(room.size ? [{ icon: <MapPin className="w-3.5 h-3.5" />, label: room.size }] : []),
+          ].map(({ icon, label }, i) => (
+            <div
+              key={i}
+              style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#6b7280" }}
+              className="flex items-center gap-1 capitalize"
+            >
+              <span className="text-gray-400">{icon}</span>
+              {label}
             </div>
-          )}
+          ))}
         </div>
 
         {/* Description */}
         {room.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+          <p
+            style={{ ...sans, fontSize: "12px", fontWeight: 300, letterSpacing: "0.02em", color: "#6b7280" }}
+            className="mb-4 line-clamp-1 leading-relaxed"
+          >
             {room.description}
           </p>
         )}
 
-        {/* ✅ CHAMP CODE PROMO - APPARAIT SEULEMENT QUAND L'UTILISATEUR CLIQUE */}
+        {/* ── Zone code promo ── */}
         {showPromoInput && (
-          <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-blue-900 flex items-center">
-                <Tag className="w-4 h-4 mr-2" />
-                Entrez votre code promo
-              </label>
-              <button
-                onClick={resetPromoCode}
-                className="text-blue-600 hover:text-blue-800 transition-colors"
-                title="Fermer"
+          <div className="mb-4 p-3.5 bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl">
+            <div className="flex items-center justify-between mb-2.5">
+              <label
+                style={{ ...sans, fontSize: "10px", fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase" }}
+                className="text-blue-800 flex items-center gap-1.5"
               >
-                <X className="w-4 h-4" />
+                <Tag className="w-3.5 h-3.5" />
+                Code promo
+              </label>
+              <button onClick={resetPromoCode} className="text-blue-400 hover:text-blue-700 transition-colors">
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            
-            <div className="flex gap-2 mb-2">
+
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 onKeyPress={handleKeyPress}
                 placeholder="Votre code confidentiel"
-                className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 disabled={verifying}
                 autoFocus
+                style={{ ...sans, fontSize: "12px", letterSpacing: "0.08em" }}
+                className="flex-1 px-3 py-2 border border-blue-200 rounded-lg
+                  focus:ring-2 focus:ring-blue-400 focus:border-transparent
+                  bg-white transition-all outline-none"
               />
               <button
                 onClick={verifyPromoCode}
                 disabled={verifying || !promoCode.trim()}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg
+                  hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
+                  transition-colors"
               >
-                {verifying ? '...' : 'Vérifier'}
+                {verifying ? '···' : 'OK'}
               </button>
             </div>
 
-            {/* Message d'erreur ou succès */}
             {promoError && (
-              <div className="flex items-center gap-2 text-red-600 text-sm animate-pulse">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{promoError}</span>
+              <div style={sans} className="flex items-center gap-2 mt-2 text-red-500 text-xs">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                {promoError}
               </div>
             )}
-            
             {verifiedPromo && (
-              <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
-                <Check className="w-4 h-4 flex-shrink-0" />
-                <span>Code appliqué ! Économie de {formatPrice(verifiedPromo.economie)}</span>
+              <div style={sans} className="flex items-center gap-2 mt-2 text-green-600 text-xs font-medium">
+                <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                Code appliqué — économie de {formatPrice(verifiedPromo.economie)}
               </div>
             )}
           </div>
         )}
 
-        {/* Équipements */}
+        {/* ── Équipements ── */}
         {room.amenities && room.amenities.length > 0 && (
-          <div className="mb-4">
-            <div className="flex flex-wrap gap-2">
-              {room.amenities.slice(0, 3).map((amenity, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded transition-colors hover:bg-gray-200"
-                >
-                  {amenity}
-                </span>
-              ))}
-              {room.amenities.length > 3 && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
-                  +{room.amenities.length - 3}
-                </span>
-              )}
-            </div>
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            {room.amenities.slice(0, 3).map((amenity, i) => (
+              <span
+                key={i}
+                style={{ ...sans, fontSize: "10px", fontWeight: 300, letterSpacing: "0.06em" }}
+                className="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-100 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                {amenity}
+              </span>
+            ))}
+            {room.amenities.length > 3 && (
+              <span
+                style={{ ...sans, fontSize: "10px", color: "#9ca3af" }}
+                className="px-2.5 py-1 bg-gray-50 rounded-full border border-gray-100"
+              >
+                +{room.amenities.length - 3}
+              </span>
+            )}
           </div>
         )}
 
-        {/* ✅ BOUTONS D'ACTION - SIMPLIFIÉS */}
+        {/* ── Boutons d'action ── */}
         <div className="flex gap-2">
-          {/* BOUTON CODE PROMO UNIQUEMENT SI LA CHAMBRE A DES PROMOS */}
+          {/* Bouton code promo */}
           {hasActivePromos && (
             <button
               onClick={(e) => {
@@ -362,39 +348,44 @@ const RoomCard = ({ room }) => {
                 setShowPromoInput(!showPromoInput)
                 if (showPromoInput) resetPromoCode()
               }}
-              className={`flex-1 py-2 px-4 rounded-lg text-center text-sm font-medium transition-all ${
-                showPromoInput 
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-md'
+              style={{ ...sans, fontSize: "10px", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" }}
+              className={`flex-1 py-2.5 px-3 rounded-xl transition-all duration-200 ${
+                showPromoInput
+                  ? 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-sm'
               }`}
             >
-              {showPromoInput ? 'Annuler' : '🎁 Code Promo'}
+              {showPromoInput ? 'Annuler' : '🎁 Code'}
             </button>
           )}
-          
-          {/* ✅ BOUTON RÉSERVER - TOUJOURS LE MÊME STYLE */}
+
+          {/* Bouton réserver */}
           <button
             onClick={handleReservationClick}
             disabled={room.status !== 'disponible'}
-            className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-2 px-4 rounded-lg text-center text-xs font-medium transition-all ${
-              room.status === 'disponible'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
+            style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
+            className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-2.5 px-4 rounded-xl
+              transition-all duration-200
+              ${room.status === 'disponible'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
           >
-            {room.status === 'disponible' ? 'Réserver maintenant' : 'Indisponible'}
+            {room.status === 'disponible' ? 'Réserver' : 'Indisponible'}
           </button>
         </div>
 
-        {/* ✅ INDICATEUR DE PRIX FINAL UNIQUEMENT SI CODE APPLIQUÉ */}
+        {/* Prix final si promo */}
         {verifiedPromo && room.status === 'disponible' && (
           <div className="mt-3 text-center">
-            <div className="text-xs text-gray-500">
-              Prix final: <span className="font-bold text-orange-600 text-sm">{formatPrice(displayPrice)}</span>
-              <span className="text-green-600 ml-2">
-                (Économie: {formatPrice(verifiedPromo.economie)})
+            <p style={{ ...sans, fontSize: "10px", letterSpacing: "0.08em", color: "#9ca3af" }}>
+              Prix final :{' '}
+              <span style={{ ...serif, fontSize: "15px", color: "#ea580c", fontWeight: 400 }}>
+                {formatPrice(displayPrice)}
               </span>
-            </div>
+              <span className="ml-2 text-green-600">
+                (économie : {formatPrice(verifiedPromo.economie)})
+              </span>
+            </p>
           </div>
         )}
       </div>
