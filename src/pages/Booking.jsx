@@ -1,3 +1,6 @@
+// ══════════════════════════════════════════════════
+// src/pages/Booking.jsx — LUXE HÔTELIÈRE
+// ══════════════════════════════════════════════════
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import PaymentForm from '../components/SecurePaymentForm';
@@ -5,13 +8,21 @@ import { Calendar, Users, AlertCircle, CheckCircle, Loader, CreditCard } from 'l
 import roomsService from '../services/roomsService';
 import reservationsService from '../services/reservationsService';
 
+const serif = { fontFamily: "'Cormorant Garamond', serif" };
+const sans  = { fontFamily: "'Montserrat', sans-serif" };
+
+const fieldClass = `w-full border border-gray-200 rounded-xl px-4 py-3
+  focus:ring-2 focus:ring-amber-300/40 focus:border-amber-400
+  outline-none transition-all duration-200 bg-gray-50/50`;
+
+const labelStyle = { ...sans, fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase" };
+
 export default function Booking() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const roomId = searchParams.get('room');
 
-  // ✅ ÉTATS SIMPLIFIÉS
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,93 +30,50 @@ export default function Booking() {
   const [rooms, setRooms] = useState([]);
   const [reservation, setReservation] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
-
-  // ✅ ÉTAT PROMO - UNIQUEMENT POUR LES DONNÉES REÇUES
   const [activePromo, setActivePromo] = useState(null);
-
-  // États existants pour les options de paiement
   const [paymentOption, setPaymentOption] = useState('full');
   const [partialNights, setPartialNights] = useState(1);
 
-  // Formulaire
   const [form, setForm] = useState({
-    name: '',
-    surname: '',
-    email: '',
-    phone: '',
-    checkin: '',
-    checkout: '',
-    adults: 1,
-    children: 0,
-    roomId: roomId || '',
-    specialRequests: ''
+    name: '', surname: '', email: '', phone: '',
+    checkin: '', checkout: '', adults: 1, children: 0,
+    roomId: roomId || '', specialRequests: ''
   });
 
-  // ✅ RÉCUPÉRER LES DONNÉES PROMO DEPUIS LA NAVIGATION
   useEffect(() => {
     if (location.state?.promoData) {
       console.log('🎯 Promo reçue depuis navigation:', location.state.promoData);
       setActivePromo(location.state.promoData);
-      
-      // ✅ RÉINITIALISER LES DATES SI ELLES NE SONT PAS DANS L'INTERVALLE
       const { checkin, checkout } = form;
       if (checkin || checkout) {
         const promoStart = new Date(location.state.promoData.dateDebut);
         const promoEnd = new Date(location.state.promoData.dateFin);
-        
-        if (checkin && new Date(checkin) < promoStart) {
-          setForm(prev => ({ ...prev, checkin: '' }));
-        }
-        if (checkout && new Date(checkout) > promoEnd) {
-          setForm(prev => ({ ...prev, checkout: '' }));
-        }
+        if (checkin && new Date(checkin) < promoStart) setForm(prev => ({ ...prev, checkin: '' }));
+        if (checkout && new Date(checkout) > promoEnd) setForm(prev => ({ ...prev, checkout: '' }));
       }
     }
   }, [location.state]);
 
-  // ✅ CALCULER LES DATES MIN/MAX POUR LES CALENDRIERS
   const getDateConstraints = () => {
     if (activePromo) {
-      // ✅ AVEC PROMO : RESTREINDRE AUX DATES DE VALIDITÉ
       const promoStart = new Date(activePromo.dateDebut);
       const promoEnd = new Date(activePromo.dateFin);
-      
-      return {
-        minDate: promoStart.toISOString().split('T')[0],
-        maxDate: promoEnd.toISOString().split('T')[0],
-        minCheckout: form.checkin || promoStart.toISOString().split('T')[0]
-      };
+      return { minDate: promoStart.toISOString().split('T')[0], maxDate: promoEnd.toISOString().split('T')[0], minCheckout: form.checkin || promoStart.toISOString().split('T')[0] };
     } else {
-      // ✅ SANS PROMO : DATES STANDARD
       const today = new Date().toISOString().split('T')[0];
-      return {
-        minDate: today,
-        maxDate: null, // Pas de restriction max sans promo
-        minCheckout: form.checkin || today
-      };
+      return { minDate: today, maxDate: null, minCheckout: form.checkin || today };
     }
   };
 
   const dateConstraints = getDateConstraints();
+  const formatPrice = (price) => roomsService.formatPrice(price);
 
-  // ✅ FORMATER LE PRIX EN XAF
-  const formatPrice = (price) => {
-    return roomsService.formatPrice(price);
-  };
+  useEffect(() => { loadRooms(); }, []);
 
-  // Charger les chambres disponibles
-  useEffect(() => {
-    loadRooms();
-  }, []);
-
-  // Pré-sélectionner la chambre si ID dans URL
   useEffect(() => {
     if (roomId && rooms.length > 0) {
       const room = rooms.find(r => r._id === roomId);
-      if (room) {
-        setSelectedRoom(room);
-        setForm(prev => ({ ...prev, roomId: roomId }));
-      }
+      if (room) { setSelectedRoom(room); setForm(prev => ({ ...prev, roomId })); }
     }
   }, [roomId, rooms]);
 
@@ -113,464 +81,252 @@ export default function Booking() {
     try {
       const response = await fetch(import.meta.env.VITE_API_BASE_URL + '/chambres');
       const data = await response.json();
-      if (data.success) {
-        setRooms(data.chambres || []);
-      }
-    } catch (err) {
-      console.error('Erreur chargement chambres:', err);
-    }
+      if (data.success) setRooms(data.chambres || []);
+    } catch (err) { console.error('Erreur chargement chambres:', err); }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-
-    if (name === 'roomId') {
-      const room = rooms.find(r => r._id === value);
-      setSelectedRoom(room);
-      // ✅ RÉINITIALISER LA PROMO SI LA CHAMBRE CHANGE
-      setActivePromo(null);
-    }
-
-    // ✅ RÉINITIALISER CHECKOUT SI CHECKIN CHANGE
-    if (name === 'checkin') {
-      setForm(prev => ({ ...prev, checkout: '' }));
-    }
+    if (name === 'roomId') { const room = rooms.find(r => r._id === value); setSelectedRoom(room); setActivePromo(null); }
+    if (name === 'checkin') setForm(prev => ({ ...prev, checkout: '' }));
   };
 
-  // Gestion du changement d'option de paiement
-  const handlePaymentOptionChange = (option) => {
-    setPaymentOption(option);
-    if (option !== 'partial') {
-      setPartialNights(1);
-    }
-  };
+  const handlePaymentOptionChange = (option) => { setPaymentOption(option); if (option !== 'partial') setPartialNights(1); };
 
-  // Gestion du changement du nombre de nuits partielles
   const handlePartialNightsChange = (e) => {
     const nights = parseInt(e.target.value);
     const totalNights = calculateNights();
-    
-    if (nights >= 1 && nights <= totalNights) {
-      setPartialNights(nights);
-    }
+    if (nights >= 1 && nights <= totalNights) setPartialNights(nights);
   };
 
-  // Calculer le nombre de nuits
   const calculateNights = () => {
     if (form.checkin && form.checkout) {
-      const checkIn = new Date(form.checkin);
-      const checkOut = new Date(form.checkout);
-      const diffTime = checkOut - checkIn;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const checkIn = new Date(form.checkin); const checkOut = new Date(form.checkout);
+      const diffDays = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
       return diffDays > 0 ? diffDays : 0;
     }
     return 0;
   };
 
-  // ✅ CALCULER LE MONTANT DE BASE (SANS PROMO)
   const calculateBaseAmount = () => {
     if (!selectedRoom) return 0;
-    
-    const totalNights = calculateNights();
-    const basePricePerNight = selectedRoom.price;
-
+    const totalNights = calculateNights(); const basePricePerNight = selectedRoom.price;
     switch (paymentOption) {
-      case 'first-night':
-        return basePricePerNight;
-      
-      case 'partial':
-        const nightsToPay = Math.min(partialNights, totalNights);
-        return basePricePerNight * nightsToPay;
-      
-      case 'full':
-      default:
-        return basePricePerNight * totalNights;
+      case 'first-night': return basePricePerNight;
+      case 'partial': return basePricePerNight * Math.min(partialNights, totalNights);
+      default: return basePricePerNight * totalNights;
     }
   };
 
-  // ✅ CALCULER LE MONTANT AVEC RÉDUCTION (SI PROMO ACTIVE)
   const calculateAmountWithPromo = () => {
     if (!selectedRoom || !activePromo) return 0;
-    
-    const totalNights = calculateNights();
-    // Utiliser le prix réduit de la promo
-    const promoPricePerNight = activePromo.prixReduit;
-
+    const totalNights = calculateNights(); const promoPricePerNight = activePromo.prixReduit;
     switch (paymentOption) {
-      case 'first-night':
-        return promoPricePerNight;
-      
-      case 'partial':
-        const nightsToPay = Math.min(partialNights, totalNights);
-        return promoPricePerNight * nightsToPay;
-      
-      case 'full':
-      default:
-        return promoPricePerNight * totalNights;
+      case 'first-night': return promoPricePerNight;
+      case 'partial': return promoPricePerNight * Math.min(partialNights, totalNights);
+      default: return promoPricePerNight * totalNights;
     }
   };
 
-  // ✅ CALCULER LE MONTANT FINAL (AVEC PROMO SI ACTIVE)
-  const calculateFinalAmount = () => {
-    if (activePromo) {
-      return Math.round(calculateAmountWithPromo());
-    } else {
-      return Math.round(calculateBaseAmount());
-    }
-  };
+  const calculateFinalAmount = () => activePromo ? Math.round(calculateAmountWithPromo()) : Math.round(calculateBaseAmount());
 
-  // Obtenir le nombre de nuits à payer
   const getNightsToPay = () => {
     const totalNights = calculateNights();
-    
     switch (paymentOption) {
-      case 'first-night':
-        return 1;
-      
-      case 'partial':
-        return Math.min(partialNights, totalNights);
-      
-      case 'full':
-      default:
-        return totalNights;
+      case 'first-night': return 1;
+      case 'partial': return Math.min(partialNights, totalNights);
+      default: return totalNights;
     }
   };
 
-  // Obtenir la description de l'option de paiement
   const getPaymentOptionDescription = () => {
-    const nightsToPay = getNightsToPay();
-    const totalNights = calculateNights();
-    
+    const nightsToPay = getNightsToPay(); const totalNights = calculateNights();
     switch (paymentOption) {
-      case 'first-night':
-        return `Première nuit (sur ${totalNights} nuits totales)`;
-      
-      case 'partial':
-        return `${nightsToPay} nuit${nightsToPay > 1 ? 's' : ''} (sur ${totalNights} nuits totales)`;
-      
-      case 'full':
-        return `Totalité (${totalNights} nuit${totalNights > 1 ? 's' : ''})`;
-      
-      default:
-        return '';
+      case 'first-night': return `Première nuit (sur ${totalNights} nuits totales)`;
+      case 'partial': return `${nightsToPay} nuit${nightsToPay > 1 ? 's' : ''} (sur ${totalNights} nuits totales)`;
+      default: return `Totalité (${totalNights} nuit${totalNights > 1 ? 's' : ''})`;
     }
   };
 
-  // FONCTION POUR REDIRIGER VERS CYBERSOURCE - VERSION CORRIGÉE ET SÉCURISÉE
   const redirectToCyberSource = (paymentData) => {
     console.log('🚀 Redirection vers CyberSource...', paymentData);
-    
     try {
-      // ✅ VALIDATION COMPLÈTE DES DONNÉES
-      if (!paymentData) {
-        throw new Error('Aucune donnée de paiement reçue');
-      }
-      
-      if (!paymentData.form_data || typeof paymentData.form_data !== 'object') {
-        throw new Error('Données de formulaire manquantes ou invalides');
-      }
-      
-      if (!paymentData.form_action) {
-        throw new Error('URL de redirection manquante');
-      }
-      
-      // Vérifier que form_data n'est pas vide
+      if (!paymentData) throw new Error('Aucune donnée de paiement reçue');
+      if (!paymentData.form_data || typeof paymentData.form_data !== 'object') throw new Error('Données de formulaire manquantes ou invalides');
+      if (!paymentData.form_action) throw new Error('URL de redirection manquante');
       const formDataKeys = Object.keys(paymentData.form_data);
-      if (formDataKeys.length === 0) {
-        throw new Error('Aucun champ de formulaire trouvé');
-      }
-      
+      if (formDataKeys.length === 0) throw new Error('Aucun champ de formulaire trouvé');
       console.log(`📋 ${formDataKeys.length} champs de formulaire détectés`);
-
       const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = paymentData.form_action;
-      form.style.display = 'none';
-      
-      // ✅ BOUCLE SÉCURISÉE avec gestion d'erreur
+      form.method = 'POST'; form.action = paymentData.form_action; form.style.display = 'none';
       formDataKeys.forEach(key => {
         const value = paymentData.form_data[key];
-        
-        if (value != null) {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = value.toString();
-          form.appendChild(input);
-          console.log(`🔹 Champ ajouté: ${key} = ${value}`);
-        }
+        if (value != null) { const input = document.createElement('input'); input.type = 'hidden'; input.name = key; input.value = value.toString(); form.appendChild(input); }
       });
-      
-      document.body.appendChild(form);
-      console.log('📤 Soumission du formulaire CyberSource...');
-      form.submit();
-      
+      document.body.appendChild(form); console.log('📤 Soumission du formulaire CyberSource...'); form.submit();
     } catch (error) {
       console.error('❌ Erreur lors de la redirection CyberSource:', error);
-      setError(`Erreur de paiement: ${error.message}. Veuillez utiliser le paiement alternatif.`);
-      setStep(2); // Retour au fallback de paiement local
+      setError(`Erreur de paiement: ${error.message}. Veuillez utiliser le paiement alternatif.`); setStep(2);
     }
   };
 
-  // ✅ ÉTAPE 1: CRÉER LA RÉSERVATION SANS AUTHENTIFICATION
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-
-    // Validations existantes
-    if (!form.roomId) {
-      setError('Veuillez sélectionner une chambre');
-      return;
-    }
-
-    if (!form.name || !form.surname || !form.email) {
-      setError('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
-    if (!form.checkin || !form.checkout) {
-      setError('Veuillez sélectionner les dates');
-      return;
-    }
-
-    const checkInDate = new Date(form.checkin);
-    const checkOutDate = new Date(form.checkout);
-
-    if (checkOutDate <= checkInDate) {
-      setError('La date de départ doit être après la date d\'arrivée');
-      return;
-    }
-
-    if (calculateNights() === 0) {
-      setError('La réservation doit être d\'au moins 1 nuit');
-      return;
-    }
-
-    // ✅ VALIDATION STRICTE DES DATES PAR RAPPORT À LA PROMO
+    e.preventDefault(); setError(null);
+    if (!form.roomId) { setError('Veuillez sélectionner une chambre'); return; }
+    if (!form.name || !form.surname || !form.email) { setError('Veuillez remplir tous les champs obligatoires'); return; }
+    if (!form.checkin || !form.checkout) { setError('Veuillez sélectionner les dates'); return; }
+    const checkInDate = new Date(form.checkin); const checkOutDate = new Date(form.checkout);
+    if (checkOutDate <= checkInDate) { setError('La date de départ doit être après la date d\'arrivée'); return; }
+    if (calculateNights() === 0) { setError('La réservation doit être d\'au moins 1 nuit'); return; }
     if (activePromo) {
-      const promoStart = new Date(activePromo.dateDebut);
-      const promoEnd = new Date(activePromo.dateFin);
-      
+      const promoStart = new Date(activePromo.dateDebut); const promoEnd = new Date(activePromo.dateFin);
       if (checkInDate < promoStart || checkOutDate > promoEnd) {
-        setError(`Les dates doivent être strictement comprises entre ${promoStart.toLocaleDateString('fr-FR')} et ${promoEnd.toLocaleDateString('fr-FR')} pour bénéficier de cette promotion`);
-        return;
+        setError(`Les dates doivent être strictement comprises entre ${promoStart.toLocaleDateString('fr-FR')} et ${promoEnd.toLocaleDateString('fr-FR')} pour bénéficier de cette promotion`); return;
       }
     }
-
     setLoading(true);
-
     try {
       console.log('🔹 Début création réservation publique...');
-
-      // ✅ CALCULER LE MONTANT FINAL (AVEC OU SANS PROMO)
       const finalAmount = calculateFinalAmount();
-
-      // Données de réservation avec code promo et prix final
-     // Modifiez seulement la section de création de réservation (lignes 395-396)
-
-// RECHERCHEZ CETTE SECTION DANS VOTRE FICHIER Booking.jsx (vers la ligne 395) :
-const reservationData = {
-  chambreId: form.roomId,
-  checkIn: form.checkin,
-  checkOut: form.checkout,
-  adults: parseInt(form.adults),
-  children: parseInt(form.children),
-  guests: parseInt(form.adults) + parseInt(form.children),
-  specialRequests: form.specialRequests,
-  paymentMethod: 'card',
-  paymentOption: paymentOption,
-  nightsToPay: getNightsToPay(),
-  // ✅ INCLURE LE CODE PROMO SEULEMENT SI ACTIF
-  codePromo: activePromo ? activePromo.codePromo : undefined,
-  // ✅ INCLURE LE PRIX FINAL (AVEC RÉDUCTION SI PROMO)
-  prixTotal: finalAmount, // ← ASSUREZ-VOUS QUE C'EST BIEN LÀ
-  clientInfo: {
-    name: form.name,
-    surname: form.surname,
-    email: form.email,
-    phone: form.phone
-  }
-};
-
-console.log('🔹 Données réservation envoyées au backend:', {
-  prixTotal: finalAmount,
-  codePromo: activePromo ? activePromo.codePromo : 'AUCUN',
-  paymentOption: paymentOption,
-  nightsToPay: getNightsToPay()
-});
-
+      const reservationData = {
+        chambreId: form.roomId, checkIn: form.checkin, checkOut: form.checkout,
+        adults: parseInt(form.adults), children: parseInt(form.children),
+        guests: parseInt(form.adults) + parseInt(form.children),
+        specialRequests: form.specialRequests, paymentMethod: 'card',
+        paymentOption, nightsToPay: getNightsToPay(),
+        codePromo: activePromo ? activePromo.codePromo : undefined,
+        prixTotal: finalAmount,
+        clientInfo: { name: form.name, surname: form.surname, email: form.email, phone: form.phone }
+      };
+      console.log('🔹 Données réservation envoyées au backend:', { prixTotal: finalAmount, codePromo: activePromo ? activePromo.codePromo : 'AUCUN', paymentOption, nightsToPay: getNightsToPay() });
       const reservationResponse = await fetch(import.meta.env.VITE_API_BASE_URL + '/reservations/public', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reservationData)
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reservationData)
       });
-
       const reservationResult = await reservationResponse.json();
-
       console.log('🔹 Réponse création réservation:', reservationResult);
-
-      if (!reservationResponse.ok || !reservationResult.success) {
-        throw new Error(reservationResult.message || 'Erreur lors de la création de la réservation');
-      }
-
+      if (!reservationResponse.ok || !reservationResult.success) throw new Error(reservationResult.message || 'Erreur lors de la création de la réservation');
       console.log('✅ Réservation créée:', reservationResult.reservation);
       setReservation(reservationResult.reservation);
-      
       if (reservationResult.payment) {
         console.log('💰 Données de paiement reçues (montant envoyé):', reservationResult.payment.form_data?.amount);
         setPaymentData(reservationResult.payment);
-        
-        setTimeout(() => {
-          redirectToCyberSource(reservationResult.payment);
-        }, 100);
-        
+        setTimeout(() => { redirectToCyberSource(reservationResult.payment); }, 100);
       } else {
-        setStep(2);
-        console.log('✅ Passage à l\'étape 2 (paiement local)');
+        setStep(2); console.log('✅ Passage à l\'étape 2 (paiement local)');
       }
-
     } catch (err) {
       console.error('❌ Erreur:', err);
       setError(err.message || 'Erreur lors de la création de la réservation');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // Étape 2: Paiement manuel (fallback si CyberSource échoue)
-  const handlePaymentSuccess = (paymentResult) => {
-    console.log('✅ Paiement réussi:', paymentResult);
-    setStep(3);
-  };
-
-  // Étape 2: Échec du paiement
-  const handlePaymentError = (errorMessage) => {
-    console.error('❌ Erreur paiement:', errorMessage);
-    setError(errorMessage);
-  };
-
-  // Retour à l'étape 1
-  const handleBackToForm = () => {
-    setStep(1);
-    setError(null);
-  };
+  const handlePaymentSuccess = (paymentResult) => { console.log('✅ Paiement réussi:', paymentResult); setStep(3); };
+  const handlePaymentError = (errorMessage) => { console.error('❌ Erreur paiement:', errorMessage); setError(errorMessage); };
+  const handleBackToForm = () => { setStep(1); setError(null); };
 
   // COMPOSANT DE REDIRECTION CYBERSOURCE
   const CyberSourceRedirect = () => {
     useEffect(() => {
-      if (paymentData) {
-        console.log('🔄 Redirection automatique vers CyberSource...');
-        redirectToCyberSource(paymentData);
-      }
+      if (paymentData) { console.log('🔄 Redirection automatique vers CyberSource...'); redirectToCyberSource(paymentData); }
     }, [paymentData]);
-
     return (
       <div className="container-max py-12">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mb-6">
-            <CreditCard className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Redirection vers le paiement sécurisé</h1>
-            <p className="text-gray-600 mb-4">
-              Vous allez être redirigé vers la plateforme de paiement sécurisée CyberSource...
-            </p>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="text-sm text-gray-500 mt-4">
-              Si la redirection ne se fait pas automatiquement, 
-              <button 
-                onClick={() => redirectToCyberSource(paymentData)}
-                className="text-blue-600 hover:text-blue-700 underline ml-1"
-              >
-                cliquez ici
-              </button>
-            </p>
-          </div>
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">
+          <CreditCard className="w-14 h-14 text-blue-500 mx-auto mb-5" />
+          <h1 style={{ ...serif, fontWeight: 300, fontSize: "26px" }} className="text-gray-900 mb-2">
+            Redirection vers le paiement sécurisé
+          </h1>
+          <p style={{ ...sans, fontSize: "13px", fontWeight: 300, color: "#9ca3af" }} className="mb-6">
+            Vous allez être redirigé vers la plateforme de paiement sécurisée CyberSource…
+          </p>
+          <div className="animate-spin rounded-full h-10 w-10 border border-blue-500 border-t-transparent mx-auto" />
+          <p style={{ ...sans, fontSize: "11px", color: "#9ca3af", marginTop: 16 }}>
+            Si la redirection ne se fait pas automatiquement,{' '}
+            <button onClick={() => redirectToCyberSource(paymentData)} style={{ color: "#2563eb" }}>
+              cliquez ici
+            </button>
+          </p>
         </div>
       </div>
     );
   };
 
-  // ========== RENDU ÉTAPE 3 : CONFIRMATION ==========
+  // ── ÉTAPE 3 : CONFIRMATION ──
   if (step === 3 && reservation) {
     return (
       <div className="container-max py-12">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mb-6">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-2">Réservation Confirmée !</h1>
-            <p className="text-gray-600">
-              Votre paiement a été traité avec succès
-            </p>
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="w-9 h-9 text-green-600" />
           </div>
+          <h1 style={{ ...serif, fontWeight: 300, fontSize: "36px", letterSpacing: "0.03em" }} className="text-gray-900 mb-2">
+            Réservation Confirmée !
+          </h1>
+          <p style={{ ...sans, fontSize: "13px", fontWeight: 300, color: "#9ca3af" }} className="mb-7">
+            Votre paiement a été traité avec succès
+          </p>
 
-          <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left">
-            <h3 className="font-semibold mb-3">Détails de votre réservation</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Numéro:</span>
-                <span className="font-medium font-mono text-xs">{reservation._id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Chambre:</span>
-                <span className="font-medium">{selectedRoom?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Dates:</span>
-                <span className="font-medium">
-                  {new Date(form.checkin).toLocaleDateString('fr-FR')} au {new Date(form.checkout).toLocaleDateString('fr-FR')}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Nuits totales:</span>
-                <span className="font-medium">{calculateNights()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Option de paiement:</span>
-                <span className="font-medium capitalize">{getPaymentOptionDescription()}</span>
-              </div>
-              
-              {/* ✅ Affichage de la réduction si promo active */}
+          <div className="bg-gradient-to-br from-gray-50 to-amber-50/20 rounded-2xl p-6 mb-6 text-left border border-gray-100">
+            <h3 style={{ ...serif, fontWeight: 500, fontSize: "18px" }} className="text-gray-900 mb-4">
+              Détails de votre réservation
+            </h3>
+            <div style={{ width: 16, height: 1, background: "rgba(212,160,51,0.4)", marginBottom: 14 }} />
+            <div className="space-y-3">
+              {[
+                { label: "Numéro", value: reservation._id, mono: true },
+                { label: "Chambre", value: selectedRoom?.name },
+                { label: "Dates", value: `${new Date(form.checkin).toLocaleDateString('fr-FR')} au ${new Date(form.checkout).toLocaleDateString('fr-FR')}` },
+                { label: "Nuits totales", value: `${calculateNights()}` },
+                { label: "Option de paiement", value: getPaymentOptionDescription() },
+              ].map(({ label, value, mono }) => (
+                <div key={label} className="flex justify-between items-baseline">
+                  <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>{label}</span>
+                  <span style={mono ? { fontFamily: "monospace", fontSize: "10px", color: "#6b7280" } : { ...sans, fontSize: "12px", fontWeight: 400, color: "#111" }}>
+                    {value}
+                  </span>
+                </div>
+              ))}
               {activePromo && (
                 <>
-                  <div className="flex justify-between text-green-600">
-                    <span>Réduction appliquée:</span>
-                    <span className="font-medium">-{formatPrice(activePromo.economie)}</span>
+                  <div className="flex justify-between items-baseline">
+                    <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>Réduction appliquée</span>
+                    <span style={{ ...sans, fontSize: "12px", color: "#16a34a" }}>-{formatPrice(activePromo.economie)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-500 text-xs">
-                    <span>Code promo:</span>
-                    <span className="font-medium">{activePromo.codePromo}</span>
+                  <div className="flex justify-between items-baseline">
+                    <span style={{ ...sans, fontSize: "10px", color: "#9ca3af" }}>Code promo</span>
+                    <span style={{ ...sans, fontSize: "10px", fontWeight: 500, color: "#6b7280" }}>{activePromo.codePromo}</span>
                   </div>
                 </>
               )}
-              
-              <div className="flex justify-between border-t pt-2 mt-2">
-                <span className="text-gray-600 font-semibold">Montant payé:</span>
-                <span className="font-bold text-green-600 text-lg">
+              <div className="flex justify-between items-baseline border-t border-gray-100 pt-3 mt-1">
+                <span style={{ ...sans, fontSize: "11px", fontWeight: 500, color: "#374151" }}>Montant payé</span>
+                <span style={{ ...serif, fontWeight: 400, fontSize: "20px", color: "#16a34a" }}>
                   {formatPrice(reservation.totalAmount || calculateFinalAmount())}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm text-left">
-            <p className="font-semibold text-blue-900 mb-2">📧 Email de confirmation envoyé</p>
-            <p className="text-blue-700">
-              Un email de confirmation a été envoyé à <strong>{form.email}</strong> avec tous les détails de votre réservation.
+          <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 mb-6 text-left">
+            <p style={{ ...sans, fontSize: "11px", fontWeight: 600, color: "#1e40af" }} className="mb-1">
+              📧 Email de confirmation envoyé
+            </p>
+            <p style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#3b82f6" }}>
+              Un email a été envoyé à <strong>{form.email}</strong> avec tous les détails.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate('/')}
-              className="w-full px-5 py-3 rounded-full text-white btn-gradient font-semibold hover:opacity-90 transition-opacity"
-            >
-              🏠 Retour à l'accueil
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 mt-6">
+          <button onClick={() => navigate('/')}
+                  style={{
+                    ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase",
+                    color: "#1a1208", background: "linear-gradient(135deg,#e8c97a,#d4a033)",
+                    padding: "13px 0", borderRadius: "32px", border: "none", cursor: "pointer", width: "100%",
+                    boxShadow: "0 2px 14px rgba(212,160,51,0.28)"
+                  }}>
+            🏠 Retour à l'accueil
+          </button>
+          <p style={{ ...sans, fontSize: "10px", color: "#9ca3af", marginTop: 16 }}>
             Conservez votre numéro de réservation pour toute correspondance future
           </p>
         </div>
@@ -578,39 +334,28 @@ console.log('🔹 Données réservation envoyées au backend:', {
     );
   }
 
-  // ========== RENDU REDIRECTION CYBERSOURCE ==========
-  if (paymentData) {
-    return <CyberSourceRedirect />;
-  }
+  // ── REDIRECTION CYBERSOURCE ──
+  if (paymentData) return <CyberSourceRedirect />;
 
-  // ========== RENDU ÉTAPE 2 : PAIEMENT LOCAL (FALLBACK) ==========
+  // ── ÉTAPE 2 : PAIEMENT LOCAL ──
   if (step === 2 && reservation) {
     return (
       <div className="container-max py-12">
         <div className="max-w-2xl mx-auto">
           <div className="mb-6">
-            <button
-              onClick={handleBackToForm}
-              className="text-blue-600 hover:text-blue-700 flex items-center text-sm font-medium mb-4"
-            >
+            <button onClick={handleBackToForm}
+                    style={{ ...sans, fontSize: "11px", fontWeight: 400, letterSpacing: "0.08em", color: "#2563eb" }}
+                    className="flex items-center mb-4 hover:opacity-75 transition-opacity">
               ← Retour aux informations
             </button>
           </div>
-
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-              <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-              <span>{error}</span>
+            <div style={sans} className="mb-5 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl flex items-center text-xs">
+              <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" /> {error}
             </div>
           )}
-
           <PaymentForm
-            reservation={{
-              ...reservation,
-              totalAmount: calculateFinalAmount(),
-              clientEmail: form.email,
-              clientName: `${form.surname} ${form.name}`
-            }}
+            reservation={{ ...reservation, totalAmount: calculateFinalAmount(), clientEmail: form.email, clientName: `${form.surname} ${form.name}` }}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
           />
@@ -619,331 +364,236 @@ console.log('🔹 Données réservation envoyées au backend:', {
     );
   }
 
-  // ========== RENDU ÉTAPE 1 : FORMULAIRE RÉSERVATION ==========
+  // ── ÉTAPE 1 : FORMULAIRE ──
   return (
-    <div className="container-max py-12">
-      <h1 className="section-title">Réserver une chambre</h1>
+    <div className="container-max py-16">
+      {/* En-tête */}
+      <div className="max-w-2xl mx-auto mb-8">
+        <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.28em", textTransform: "uppercase" }}
+           className="text-amber-600/70 mb-3">
+          Votre séjour
+        </p>
+        <div className="flex items-center gap-3 mb-3">
+          <span style={{ color: "rgba(212,169,106,0.5)", fontSize: "10px" }}>·</span>
+          <span style={{ width: 24, height: 1, background: "linear-gradient(90deg,transparent,rgba(212,160,51,0.55),transparent)", display: "block" }} />
+          <span style={{ color: "rgba(212,169,106,0.5)", fontSize: "10px" }}>·</span>
+        </div>
+        <h1 style={{ ...serif, fontWeight: 300, fontSize: "38px", letterSpacing: "0.03em" }}
+            className="text-gray-900">
+          Réserver une chambre
+        </h1>
+      </div>
 
+      {/* Erreur globale */}
       {error && (
-        <div className="max-w-2xl mx-auto mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-          <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-          <span>{error}</span>
+        <div style={sans} className="max-w-2xl mx-auto mb-5 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl flex items-center text-xs">
+          <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" /> {error}
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-soft"
-      >
-        {/* ✅ INDICATION PROMO ACTIVE */}
+      <form onSubmit={handleSubmit}
+            className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+
+        {/* Badge promo active */}
         {activePromo && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-green-800">🎟️ Code promo actif</p>
-                <p className="text-sm text-green-700">
-                  Validité: {new Date(activePromo.dateDebut).toLocaleDateString('fr-FR')} au {new Date(activePromo.dateFin).toLocaleDateString('fr-FR')}
+                <p style={{ ...sans, fontSize: "11px", fontWeight: 600, color: "#15803d" }}>🎟️ Code promo actif</p>
+                <p style={{ ...sans, fontSize: "10px", fontWeight: 300, color: "#16a34a", marginTop: 2 }}>
+                  Validité : {new Date(activePromo.dateDebut).toLocaleDateString('fr-FR')} au {new Date(activePromo.dateFin).toLocaleDateString('fr-FR')}
                 </p>
               </div>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              <span style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.10em" }}
+                    className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
                 {activePromo.codePromo}
               </span>
             </div>
           </div>
         )}
 
-        {/* Sélection de la chambre */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">Chambre *</label>
-          <select
-            name="roomId"
-            value={form.roomId}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          >
+        {/* Sélection chambre */}
+        <div className="mb-5">
+          <label style={labelStyle} className="block text-gray-500 mb-2">Chambre *</label>
+          <select name="roomId" value={form.roomId} onChange={handleChange} required
+                  style={{ ...sans, fontSize: "13px", fontWeight: 300 }}
+                  className={fieldClass}>
             <option value="">Sélectionnez une chambre</option>
             {rooms.map(room => (
-              <option key={room._id} value={room._id}>
-                {room.name} - {formatPrice(room.price)}/nuit
-              </option>
+              <option key={room._id} value={room._id}>{room.name} — {formatPrice(room.price)}/nuit</option>
             ))}
           </select>
         </div>
 
-        {/* Informations client */}
-        <div className="grid gap-4 md:grid-cols-2 mb-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nom *</label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Votre nom"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Prénom *</label>
-            <input
-              name="surname"
-              value={form.surname}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Votre prénom"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email *</label>
-            <input
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              type="email"
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="votre@email.com"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Téléphone</label>
-            <input
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              type="tel"
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="+237 XXX XX XX XX"
-            />
-          </div>
+        {/* Infos client */}
+        <div className="grid gap-4 md:grid-cols-2 mb-5">
+          {[
+            { name: "name", label: "Nom", placeholder: "Votre nom", required: true },
+            { name: "surname", label: "Prénom", placeholder: "Votre prénom", required: true },
+            { name: "email", label: "Email", placeholder: "votre@email.com", type: "email", required: true },
+            { name: "phone", label: "Téléphone", placeholder: "+237 XXX XX XX XX", type: "tel" },
+          ].map(({ name, label, placeholder, type = "text", required = false }) => (
+            <div key={name}>
+              <label style={labelStyle} className="block text-gray-500 mb-2">{label} {required && "*"}</label>
+              <input type={type} name={name} value={form[name]} onChange={handleChange}
+                     required={required} placeholder={placeholder}
+                     style={{ ...sans, fontSize: "13px", fontWeight: 300 }}
+                     className={fieldClass} />
+            </div>
+          ))}
         </div>
 
         {/* Dates */}
-        <div className="grid gap-4 md:grid-cols-2 mb-6">
+        <div className="grid gap-4 md:grid-cols-2 mb-5">
           <div>
-            <label className="block text-sm font-medium mb-1">
-              <Calendar className="w-4 h-4 inline mr-1" />
-              Arrivée *
+            <label style={labelStyle} className="block text-gray-500 mb-2">
+              <Calendar className="w-3.5 h-3.5 inline mr-1" /> Arrivée *
             </label>
-            <input
-              name="checkin"
-              value={form.checkin}
-              onChange={handleChange}
-              type="date"
-              min={dateConstraints.minDate}
-              max={dateConstraints.maxDate || undefined}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-            {activePromo && (
-              <p className="text-xs text-gray-500 mt-1">
-                Min: {new Date(activePromo.dateDebut).toLocaleDateString('fr-FR')}
-              </p>
-            )}
+            <input type="date" name="checkin" value={form.checkin} onChange={handleChange} required
+                   min={dateConstraints.minDate} max={dateConstraints.maxDate || undefined}
+                   style={{ ...sans, fontSize: "13px", fontWeight: 300 }}
+                   className={fieldClass} />
+            {activePromo && <p style={{ ...sans, fontSize: "10px", color: "#9ca3af", marginTop: 3 }}>Min : {new Date(activePromo.dateDebut).toLocaleDateString('fr-FR')}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
-              <Calendar className="w-4 h-4 inline mr-1" />
-              Départ *
+            <label style={labelStyle} className="block text-gray-500 mb-2">
+              <Calendar className="w-3.5 h-3.5 inline mr-1" /> Départ *
             </label>
-            <input
-              name="checkout"
-              value={form.checkout}
-              onChange={handleChange}
-              type="date"
-              min={dateConstraints.minCheckout}
-              max={dateConstraints.maxDate || undefined}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-            {activePromo && (
-              <p className="text-xs text-gray-500 mt-1">
-                Max: {new Date(activePromo.dateFin).toLocaleDateString('fr-FR')}
-              </p>
-            )}
+            <input type="date" name="checkout" value={form.checkout} onChange={handleChange} required
+                   min={dateConstraints.minCheckout} max={dateConstraints.maxDate || undefined}
+                   style={{ ...sans, fontSize: "13px", fontWeight: 300 }}
+                   className={fieldClass} />
+            {activePromo && <p style={{ ...sans, fontSize: "10px", color: "#9ca3af", marginTop: 3 }}>Max : {new Date(activePromo.dateFin).toLocaleDateString('fr-FR')}</p>}
           </div>
         </div>
 
-        {/* Nombre de personnes */}
-        <div className="grid gap-4 md:grid-cols-2 mb-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              <Users className="w-4 h-4 inline mr-1" />
-              Adultes *
-            </label>
-            <input
-              name="adults"
-              value={form.adults}
-              onChange={handleChange}
-              type="number"
-              min={1}
-              max={10}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Enfants</label>
-            <input
-              name="children"
-              value={form.children}
-              onChange={handleChange}
-              type="number"
-              min={0}
-              max={10}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+        {/* Personnes */}
+        <div className="grid gap-4 md:grid-cols-2 mb-5">
+          {[
+            { name: "adults", label: "Adultes", icon: <Users className="w-3.5 h-3.5 inline mr-1" />, min: 1, max: 10, required: true },
+            { name: "children", label: "Enfants", min: 0, max: 10 },
+          ].map(({ name, label, icon, min, max, required = false }) => (
+            <div key={name}>
+              <label style={labelStyle} className="block text-gray-500 mb-2">{icon}{label} {required && "*"}</label>
+              <input type="number" name={name} value={form[name]} onChange={handleChange}
+                     min={min} max={max} required={required}
+                     style={{ ...sans, fontSize: "13px", fontWeight: 300 }}
+                     className={fieldClass} />
+            </div>
+          ))}
         </div>
 
         {/* Options de paiement */}
         {calculateNights() > 0 && selectedRoom && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-3">Options de paiement</label>
-            
-            <div className="space-y-3">
-              {/* Option 1: Première nuit seulement */}
-              <label className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                <input
-                  type="radio"
-                  name="paymentOption"
-                  value="first-night"
-                  checked={paymentOption === 'first-night'}
-                  onChange={() => handlePaymentOptionChange('first-night')}
-                  className="mt-1 text-blue-600 focus:ring-blue-500"
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">Payer la première nuit seulement</div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Sécurisez votre réservation en payant seulement la première nuit ({formatPrice(activePromo ? activePromo.prixReduit : selectedRoom.price)})
+          <div className="mb-5">
+            <label style={labelStyle} className="block text-gray-500 mb-3">Options de paiement</label>
+            <div className="space-y-2">
+              {[
+                {
+                  value: "first-night",
+                  title: "Payer la première nuit seulement",
+                  desc: `Sécurisez votre réservation en payant seulement la première nuit (${formatPrice(activePromo ? activePromo.prixReduit : selectedRoom.price)})`
+                },
+                {
+                  value: "partial",
+                  title: "Payer un nombre partiel de nuits",
+                  desc: "Choisissez combien de nuits vous souhaitez payer maintenant"
+                },
+                {
+                  value: "full",
+                  title: "Payer la totalité du séjour",
+                  desc: "Payez l'intégralité de votre séjour en une seule fois"
+                },
+              ].map(({ value, title, desc }) => (
+                <label key={value}
+                       className={`flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${
+                         paymentOption === value ? 'border-amber-300 bg-amber-50/30' : 'border-gray-200 hover:bg-gray-50/50'
+                       }`}>
+                  <input type="radio" name="paymentOption" value={value}
+                         checked={paymentOption === value}
+                         onChange={() => handlePaymentOptionChange(value)}
+                         className="mt-1 accent-amber-500" />
+                  <div className="flex-1">
+                    <div style={{ ...sans, fontSize: "12px", fontWeight: 500, color: "#111" }}>{title}</div>
+                    <div style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af", marginTop: 2 }}>{desc}</div>
+                    {value === 'partial' && paymentOption === 'partial' && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span style={{ ...sans, fontSize: "11px", color: "#6b7280" }}>Nuits à payer :</span>
+                        <select value={partialNights} onChange={handlePartialNightsChange}
+                                style={{ ...sans, fontSize: "11px" }}
+                                className="border border-gray-200 rounded-lg px-2 py-1 focus:ring-2 focus:ring-amber-300/40 outline-none">
+                          {Array.from({ length: calculateNights() }, (_, i) => i + 1).map(night => (
+                            <option key={night} value={night}>{night} nuit{night > 1 ? 's' : ''}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </label>
-
-              {/* Option 2: Nombre partiel de nuits */}
-              <label className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                <input
-                  type="radio"
-                  name="paymentOption"
-                  value="partial"
-                  checked={paymentOption === 'partial'}
-                  onChange={() => handlePaymentOptionChange('partial')}
-                  className="mt-1 text-blue-600 focus:ring-blue-500"
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">Payer un nombre partiel de nuits</div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Choisissez combien de nuits vous souhaitez payer maintenant
-                  </div>
-                  
-                  {paymentOption === 'partial' && (
-                    <div className="mt-2 flex items-center space-x-2">
-                      <span className="text-sm text-gray-700">Nombre de nuits à payer:</span>
-                      <select
-                        value={partialNights}
-                        onChange={handlePartialNightsChange}
-                        className="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {Array.from({ length: calculateNights() }, (_, i) => i + 1).map(night => (
-                          <option key={night} value={night}>
-                            {night} nuit{night > 1 ? 's' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              </label>
-
-              {/* Option 3: Totalité (comportement actuel) */}
-              <label className="flex items-start space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                <input
-                  type="radio"
-                  name="paymentOption"
-                  value="full"
-                  checked={paymentOption === 'full'}
-                  onChange={() => handlePaymentOptionChange('full')}
-                  className="mt-1 text-blue-600 focus:ring-blue-500"
-                />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">Payer la totalité du séjour</div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Payez l'intégralité de votre séjour en une seule fois
-                  </div>
-                </div>
-              </label>
+                </label>
+              ))}
             </div>
           </div>
         )}
 
         {/* Demandes spéciales */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Demandes spéciales (optionnel)</label>
-          <textarea
-            name="specialRequests"
-            value={form.specialRequests}
-            onChange={handleChange}
-            rows="3"
-            className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Allergies, préférences, demandes particulières..."
-          />
+        <div className="mb-5">
+          <label style={labelStyle} className="block text-gray-500 mb-2">Demandes spéciales (optionnel)</label>
+          <textarea name="specialRequests" value={form.specialRequests} onChange={handleChange} rows="3"
+                    placeholder="Allergies, préférences, demandes particulières..."
+                    style={{ ...sans, fontSize: "13px", fontWeight: 300 }}
+                    className={`${fieldClass} resize-none`} />
         </div>
 
-        {/* ✅ RÉCAPITULATIF SIMPLIFIÉ ET COHÉRENT */}
+        {/* Récapitulatif */}
         {calculateNights() > 0 && selectedRoom && (
-          <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
-            <h3 className="font-semibold mb-3 text-blue-900">Récapitulatif</h3>
-            <div className="space-y-2 text-sm">
+          <div className="bg-gradient-to-br from-blue-50/80 to-amber-50/20 rounded-xl p-5 mb-6 border border-blue-100/60">
+            <h3 style={{ ...serif, fontWeight: 500, fontSize: "18px" }} className="text-blue-900 mb-3">
+              Récapitulatif
+            </h3>
+            <div style={{ width: 16, height: 1, background: "rgba(212,160,51,0.4)", marginBottom: 12 }} />
+            <div className="space-y-2.5">
               <div className="flex justify-between">
-                <span className="text-gray-700">Chambre:</span>
-                <span className="font-medium">{selectedRoom.name}</span>
+                <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>Chambre</span>
+                <span style={{ ...sans, fontSize: "12px", fontWeight: 400, color: "#111" }}>{selectedRoom.name}</span>
               </div>
-              
-              {/* ✅ AFFICHAGE COHÉRENT : PRIX PROMO OU NORMAL */}
               {activePromo ? (
                 <>
-                  <div className="flex justify-between text-gray-400">
-                    <span>Prix original:</span>
-                    <span className="line-through">{formatPrice(selectedRoom.price)}/nuit</span>
+                  <div className="flex justify-between">
+                    <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>Prix original</span>
+                    <span style={{ ...sans, fontSize: "11px", textDecoration: "line-through", color: "#9ca3af" }}>{formatPrice(selectedRoom.price)}/nuit</span>
                   </div>
-                  <div className="flex justify-between text-green-600">
-                    <span>Prix promo:</span>
-                    <span className="font-medium">{formatPrice(activePromo.prixReduit)}/nuit</span>
+                  <div className="flex justify-between">
+                    <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#16a34a" }}>Prix promo</span>
+                    <span style={{ ...sans, fontSize: "12px", fontWeight: 500, color: "#16a34a" }}>{formatPrice(activePromo.prixReduit)}/nuit</span>
                   </div>
-                  <div className="flex justify-between text-green-600 text-xs">
-                    <span>Économie:</span>
-                    <span className="font-medium">-{formatPrice(activePromo.economie)}/nuit</span>
+                  <div className="flex justify-between">
+                    <span style={{ ...sans, fontSize: "10px", color: "#9ca3af" }}>Économie</span>
+                    <span style={{ ...sans, fontSize: "10px", fontWeight: 500, color: "#16a34a" }}>-{formatPrice(activePromo.economie)}/nuit</span>
                   </div>
                 </>
               ) : (
                 <div className="flex justify-between">
-                  <span className="text-gray-700">Prix par nuit:</span>
-                  <span className="font-medium">{formatPrice(selectedRoom.price)}</span>
+                  <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>Prix par nuit</span>
+                  <span style={{ ...sans, fontSize: "12px", fontWeight: 400, color: "#111" }}>{formatPrice(selectedRoom.price)}</span>
                 </div>
               )}
-              
               <div className="flex justify-between">
-                <span className="text-gray-700">Nuits totales:</span>
-                <span className="font-medium">{calculateNights()}</span>
+                <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>Nuits totales</span>
+                <span style={{ ...sans, fontSize: "12px", fontWeight: 400, color: "#111" }}>{calculateNights()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-700">Option choisie:</span>
-                <span className="font-medium">{getPaymentOptionDescription()}</span>
+                <span style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#9ca3af" }}>Option choisie</span>
+                <span style={{ ...sans, fontSize: "12px", fontWeight: 400, color: "#111" }}>{getPaymentOptionDescription()}</span>
               </div>
-              
-              {/* ✅ INDICATION PROMO APPLIQUÉE */}
               {activePromo && (
-                <div className="flex justify-between text-green-600 text-xs">
-                  <span>Code promo appliqué:</span>
-                  <span className="font-medium">{activePromo.codePromo}</span>
+                <div className="flex justify-between">
+                  <span style={{ ...sans, fontSize: "10px", color: "#9ca3af" }}>Code promo appliqué</span>
+                  <span style={{ ...sans, fontSize: "10px", fontWeight: 500, color: "#16a34a" }}>{activePromo.codePromo}</span>
                 </div>
               )}
-              
-              <div className="flex justify-between text-lg font-bold border-t border-blue-300 pt-2 mt-2">
-                <span className="text-blue-900">Montant à payer:</span>
-                <span className="text-blue-600">
+              <div className="flex justify-between items-baseline border-t border-blue-100 pt-3 mt-1">
+                <span style={{ ...sans, fontSize: "11px", fontWeight: 600, color: "#1e40af" }}>Montant à payer</span>
+                <span style={{ ...serif, fontWeight: 400, fontSize: "24px", color: "#2563eb" }}>
                   {formatPrice(calculateFinalAmount())}
                 </span>
               </div>
@@ -951,23 +601,24 @@ console.log('🔹 Données réservation envoyées au backend:', {
           </div>
         )}
 
-        {/* BOUTON DE SOUMISSION */}
-        <button
-          className="w-full px-6 py-3 text-sm rounded-full text-white btn-gradient disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-semibold transition-all duration-200 hover:scale-105"
-          type="submit"
-          disabled={loading || !form.roomId || calculateNights() === 0}
-        >
+        {/* Bouton soumettre */}
+        <button type="submit" disabled={loading || !form.roomId || calculateNights() === 0}
+                style={{
+                  ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase",
+                  color: "#1a1208", background: "linear-gradient(135deg,#e8c97a,#d4a033)",
+                  padding: "14px 0", borderRadius: "32px", border: "none", cursor: "pointer", width: "100%",
+                  boxShadow: "0 3px 18px rgba(212,160,51,0.28)", transition: "all 0.3s",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  opacity: (loading || !form.roomId || calculateNights() === 0) ? 0.6 : 1
+                }}>
           {loading ? (
-            <>
-              <Loader className="w-5 h-5 mr-2 animate-spin" />
-              Création en cours...
-            </>
+            <><Loader className="w-4 h-4 animate-spin" /> Création en cours...</>
           ) : (
             `Payer ${formatPrice(calculateFinalAmount())}`
           )}
         </button>
 
-        <p className="text-xs text-center text-gray-500 mt-4">
+        <p style={{ ...sans, fontSize: "10px", textAlign: "center", color: "#9ca3af", marginTop: 12 }}>
           🔒 Paiement sécurisé via Cybersource (Société Générale)
         </p>
       </form>

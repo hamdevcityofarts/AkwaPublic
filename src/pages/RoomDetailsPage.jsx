@@ -1,3 +1,6 @@
+// ══════════════════════════════════════════════════
+// src/pages/RoomDetailsPage.jsx — LUXE HÔTELIÈRE
+// ══════════════════════════════════════════════════
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -7,165 +10,93 @@ import ImageSlider from '../components/ImageSlider'
 import roomsService from '../services/roomsService'
 import promoCodesService from '../services/promoCodesService'
 
+const serif = { fontFamily: "'Cormorant Garamond', serif" };
+const sans  = { fontFamily: "'Montserrat', sans-serif" };
+
 export default function RoomDetailsPage() {
   const { id } = useParams()
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { currentRoom: room, isLoading, error } = useSelector((state) => state.rooms)
   const { isAuthenticated } = useSelector((state) => state.auth)
-  
-  // ✅ MÊME LOGIQUE QUE ROOMCARD
-  const [showPromoInput, setShowPromoInput] = useState(false)
-  const [promoCode, setPromoCode] = useState('')
-  const [verifying, setVerifying] = useState(false)
-  const [promoError, setPromoError] = useState('')
-  const [verifiedPromo, setVerifiedPromo] = useState(null)
-  const [roomPromos, setRoomPromos] = useState([])
-  const [loadingPromos, setLoadingPromos] = useState(false)
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' })
 
-  // ✅ AFFICHER UNE NOTIFICATION
+  const [showPromoInput, setShowPromoInput] = useState(false)
+  const [promoCode, setPromoCode]           = useState('')
+  const [verifying, setVerifying]           = useState(false)
+  const [promoError, setPromoError]         = useState('')
+  const [verifiedPromo, setVerifiedPromo]   = useState(null)
+  const [roomPromos, setRoomPromos]         = useState([])
+  const [loadingPromos, setLoadingPromos]   = useState(false)
+  const [notification, setNotification]     = useState({ show: false, message: '', type: '' })
+
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type })
-    setTimeout(() => {
-      setNotification({ show: false, message: '', type: '' })
-    }, 4000)
+    setTimeout(() => { setNotification({ show: false, message: '', type: '' }) }, 4000)
   }
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchRoomById(id))
-    }
-    return () => {
-      dispatch(clearCurrentRoom())
-    }
+    if (id) dispatch(fetchRoomById(id))
+    return () => { dispatch(clearCurrentRoom()) }
   }, [id, dispatch])
 
-  // ✅ CHARGER LES PROMOS DE LA CHAMBRE - MÊME LOGIQUE QUE ROOMCARD
-  useEffect(() => {
-    if (room?._id) {
-      loadRoomPromos()
-    }
-  }, [room])
+  useEffect(() => { if (room?._id) loadRoomPromos() }, [room])
 
   const loadRoomPromos = async () => {
     setLoadingPromos(true)
     try {
       const response = await promoCodesService.getRoomPromos(room._id)
-      if (response.success && response.availablePromos) {
-        setRoomPromos(response.availablePromos)
-        console.log(`✅ ${response.availablePromos.length} promo(s) chargée(s) pour ${room.name}`)
-      }
-    } catch (error) {
-      console.error('❌ Erreur chargement promos:', error)
-    } finally {
-      setLoadingPromos(false)
-    }
+      if (response.success && response.availablePromos) { setRoomPromos(response.availablePromos); console.log(`✅ ${response.availablePromos.length} promo(s) chargée(s) pour ${room.name}`) }
+    } catch (error) { console.error('❌ Erreur chargement promos:', error) }
+    finally { setLoadingPromos(false) }
   }
 
-  // ✅ VÉRIFIER SI LA CHAMBRE A DES CODES PROMO
   const hasActivePromos = roomPromos.length > 0
 
-  // ✅ VÉRIFIER LE CODE PROMO - MÊME LOGIQUE QUE ROOMCARD
   const verifyPromoCode = async () => {
-    if (!promoCode.trim()) {
-      setPromoError('Veuillez entrer un code promo')
-      return
-    }
-    
-    setVerifying(true)
-    setPromoError('')
-    
+    if (!promoCode.trim()) { setPromoError('Veuillez entrer un code promo'); return }
+    setVerifying(true); setPromoError('')
     try {
       const response = await promoCodesService.verifyCodePromo(promoCode, room._id, 1)
-      
-      if (response.success) {
-        setVerifiedPromo(response.codePromo)
-        setPromoError('')
-        showNotification(`🎉 Code promo appliqué ! Économie de ${formatPrice(response.codePromo.economie)}`, 'success')
-      } else {
-        setPromoError(response.message || 'Code promo invalide')
-        setVerifiedPromo(null)
-        showNotification(response.message || 'Code promo invalide', 'error')
-      }
+      if (response.success) { setVerifiedPromo(response.codePromo); setPromoError(''); showNotification(`🎉 Code promo appliqué ! Économie de ${formatPrice(response.codePromo.economie)}`, 'success') }
+      else { setPromoError(response.message || 'Code promo invalide'); setVerifiedPromo(null); showNotification(response.message || 'Code promo invalide', 'error') }
     } catch (error) {
       const errorMessage = error.message || 'Erreur lors de la vérification du code promo'
-      setPromoError(errorMessage)
-      setVerifiedPromo(null)
-      showNotification(errorMessage, 'error')
-    } finally {
-      setVerifying(false)
-    }
+      setPromoError(errorMessage); setVerifiedPromo(null); showNotification(errorMessage, 'error')
+    } finally { setVerifying(false) }
   }
 
-  // ✅ RÉINITIALISER LE CODE PROMO
-  const resetPromoCode = () => {
-    setPromoCode('')
-    setVerifiedPromo(null)
-    setPromoError('')
-    setShowPromoInput(false)
-    showNotification('Code promo retiré', 'info')
-  }
+  const resetPromoCode = () => { setPromoCode(''); setVerifiedPromo(null); setPromoError(''); setShowPromoInput(false); showNotification('Code promo retiré', 'info') }
 
-  // ✅ CORRECTION : GESTION DU CLIC SUR "RÉSERVER" - BIEN TRANSMETTRE LES DONNÉES PROMO
   const handleReservationClick = () => {
     if (!room?._id) return
-
-    // ✅ PRÉPARER LES DONNÉES DE PROMO POUR LA RÉSERVATION - IDENTIQUE À ROOMCARD
     const promoData = verifiedPromo ? {
-      codePromo: verifiedPromo.code,
-      prixOriginal: verifiedPromo.prixOriginal,
-      prixReduit: verifiedPromo.prixReduit,
-      economie: verifiedPromo.economie,
-      dateDebut: verifiedPromo.dateDebut,
-      dateFin: verifiedPromo.dateFin,
-      // ✅ AJOUTER LES DONNÉES NÉCESSAIRES POUR LE RECALCUL DANS BOOKING
-      type: verifiedPromo.type,
-      value: verifiedPromo.value,
-      isValidForDates: true // Par défaut, la validation se fera dans Booking avec les dates
+      codePromo: verifiedPromo.code, prixOriginal: verifiedPromo.prixOriginal, prixReduit: verifiedPromo.prixReduit,
+      economie: verifiedPromo.economie, dateDebut: verifiedPromo.dateDebut, dateFin: verifiedPromo.dateFin,
+      type: verifiedPromo.type, value: verifiedPromo.value, isValidForDates: true
     } : null
-
     console.log('🚀 Navigation vers Booking avec données promo:', promoData)
-
     if (!isAuthenticated) {
-      navigate('/login', {
-        state: {
-          from: `/booking?room=${room._id}`,
-          message: 'Connectez-vous pour réserver cette chambre',
-          promoData: promoData // ✅ TRANSMETTRE LES DONNÉES PROMO
-        }
-      })
+      navigate('/login', { state: { from: `/booking?room=${room._id}`, message: 'Connectez-vous pour réserver cette chambre', promoData } })
     } else {
-      navigate(`/booking?room=${room._id}`, {
-        state: { 
-          promoData: promoData // ✅ TRANSMETTRE LES DONNÉES PROMO VERS BOOKING
-        }
-      })
+      navigate(`/booking?room=${room._id}`, { state: { promoData } })
     }
   }
 
-  // ✅ GESTION DE LA TOUCHE ENTRÉE DANS LE CHAMP CODE PROMO
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      verifyPromoCode()
-    }
-  }
-
-  // ✅ UTILISER LA MÊME FONCTION DE FORMATAGE
-  const formatPrice = (price) => {
-    return roomsService.formatPrice(price)
-  }
-
-  // ✅ PRIX À AFFICHER - MÊME LOGIQUE QUE ROOMCARD
+  const handleKeyPress = (e) => { if (e.key === 'Enter') verifyPromoCode() }
+  const formatPrice = (price) => roomsService.formatPrice(price)
   const displayPrice = verifiedPromo ? verifiedPromo.prixReduit : room?.price
   const displayOriginalPrice = verifiedPromo ? verifiedPromo.prixOriginal : null
+
+  const getTypeLabel = (type) => ({ standard:'Standard', superior:'Supérieure', deluxe:'Deluxe', suite:'Suite', family:'Familiale', executive:'Exécutive', presidential:'Présidentielle' }[type] || type)
 
   if (isLoading || loadingPromos) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
+        <div className="text-center py-16">
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border border-blue-600 border-t-transparent" />
+          <p style={{ ...sans, fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", marginTop: 16 }} className="text-gray-400">
+            Chargement…
+          </p>
         </div>
       </div>
     )
@@ -175,63 +106,49 @@ export default function RoomDetailsPage() {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Chambre non trouvée</h2>
-          <Link to="/rooms" className="inline-flex items-center text-blue-600 hover:text-blue-700">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux chambres
+          <h2 style={{ ...serif, fontWeight: 300, fontSize: "28px" }} className="text-gray-900 mb-4">Chambre non trouvée</h2>
+          <Link to="/rooms" className="inline-flex items-center gap-2"
+                style={{ ...sans, fontSize: "12px", fontWeight: 400, color: "#2563eb" }}>
+            <ArrowLeft className="w-4 h-4" /> Retour aux chambres
           </Link>
         </div>
       </div>
     )
   }
 
-  const getTypeLabel = (type) => {
-    const typeLabels = {
-      standard: 'Standard',
-      superior: 'Supérieure',
-      deluxe: 'Deluxe',
-      suite: 'Suite',
-      family: 'Familiale',
-      executive: 'Exécutive',
-      presidential: 'Présidentielle'
-    }
-    return typeLabels[type] || type
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        {/* ✅ NOTIFICATION TOAST PERSONNALISÉE */}
+
+        {/* Toast notification */}
         {notification.show && (
-          <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg border max-w-sm w-11/12 transition-all duration-300 ${
-            notification.type === 'success' 
-              ? 'bg-green-50 border-green-200 text-green-800' 
-              : notification.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-800'
-              : 'bg-blue-50 border-blue-200 text-blue-800'
-          }`}>
+          <div style={sans}
+               className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-lg border max-w-sm w-11/12 transition-all duration-300 text-xs font-medium ${
+                 notification.type === 'success' ? 'bg-green-50 border-green-200 text-green-800'
+                 : notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800'
+                 : 'bg-blue-50 border-blue-200 text-blue-800'
+               }`}>
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm font-medium">{notification.message}</span>
+              <Bell className="w-3.5 h-3.5 flex-shrink-0" />
+              {notification.message}
             </div>
           </div>
         )}
 
         {/* Bouton retour */}
-        <Link to="/rooms" className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Retour aux chambres
+        <Link to="/rooms" className="inline-flex items-center gap-2 mb-7"
+              style={{ ...sans, fontSize: "11px", fontWeight: 400, letterSpacing: "0.08em", color: "#6b7280" }}>
+          <ArrowLeft className="w-4 h-4" /> Retour aux chambres
         </Link>
 
         <div className="grid lg:grid-cols-12 gap-8">
-          {/* Slider d'images */}
+          {/* Slider */}
           <div className="lg:col-span-8 relative">
-            {/* ✅ BADGE PROMO SIMPLE - UNIQUEMENT LE BADGE */}
             {hasActivePromos && (
               <div className="absolute top-4 left-4 z-10">
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
-                  <Zap className="w-4 h-4" />
-                  <span className="font-bold">PROMO</span>
+                <div style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}
+                     className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" /> PROMO
                 </div>
               </div>
             )}
@@ -240,245 +157,207 @@ export default function RoomDetailsPage() {
             </div>
           </div>
 
-          {/* Informations de la chambre - COLONNE PLUS ÉTROITE */}
+          {/* Colonne infos */}
           <div className="lg:col-span-4">
-            <div className="sticky top-8 space-y-6">
+            <div className="sticky top-8 space-y-5">
+
+              {/* Titre */}
               <div>
-                <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+                <span style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
+                      className="inline-block bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full mb-3">
                   {getTypeLabel(room.type)}
                 </span>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{room.name}</h1>
-                <p className="text-gray-500">Chambre #{room.number}</p>
+                <h1 style={{ ...serif, fontWeight: 300, fontSize: "32px", letterSpacing: "0.03em", lineHeight: 1.1 }}
+                    className="text-gray-900 mb-1">
+                  {room.name}
+                </h1>
+                <div style={{ width: 20, height: 1, background: "rgba(212,160,51,0.45)", marginBottom: 5 }} />
+                <p style={{ ...sans, fontSize: "10px", letterSpacing: "0.14em", color: "#9ca3af" }}>
+                  Chambre #{room.number}
+                </p>
               </div>
 
-              {/* ✅ SECTION PRIX - MÊME LOGIQUE QUE ROOMCARD */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                <p className="text-sm text-gray-600 mb-2">À partir de</p>
+              {/* Prix + promo */}
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af", marginBottom: 6 }}>
+                  À partir de
+                </p>
 
-                {/* ✅ AFFICHAGE PRIX UNIFORME - PAS DE PRIX BARRÉ SAUF SI CODE APPLIQUÉ */}
                 {verifiedPromo ? (
                   <div className="mb-4">
-                    <div className="text-sm text-gray-400 line-through mb-1">
+                    <div style={{ ...sans, fontSize: "11px", color: "#9ca3af", textDecoration: "line-through", marginBottom: 2 }}>
                       {formatPrice(displayOriginalPrice)}
                     </div>
-                    <div className="text-3xl font-bold text-orange-600">
+                    <div style={{ ...serif, fontWeight: 400, fontSize: "30px", color: "#ea580c", lineHeight: 1 }}>
                       {formatPrice(displayPrice)}
                     </div>
-                    <div className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full mt-1">
+                    <div style={{ ...sans, fontSize: "9px", letterSpacing: "0.10em", textTransform: "uppercase" }}
+                         className="mt-2 px-2.5 py-1 bg-green-50 text-green-700 rounded-full inline-block">
                       Économie {formatPrice(verifiedPromo.economie)}
                     </div>
                   </div>
                 ) : (
                   <div className="mb-4">
-                    <div className="text-3xl font-bold text-blue-600">
+                    <div style={{ ...serif, fontWeight: 400, fontSize: "32px", color: "#2563eb", lineHeight: 1 }}>
                       {formatPrice(displayPrice)}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">par nuit</div>
+                    <div style={{ ...sans, fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9ca3af", marginTop: 4 }}>
+                      par nuit
+                    </div>
                   </div>
                 )}
 
-                {/* ✅ CHAMP CODE PROMO - APPARAIT SEULEMENT QUAND L'UTILISATEUR CLIQUE */}
+                {/* Champ code promo */}
                 {showPromoInput && (
-                  <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-blue-900 flex items-center">
-                        <Tag className="w-4 h-4 mr-2" />
-                        Entrez votre code promo
+                  <div className="mb-4 p-3.5 bg-gradient-to-br from-blue-50 to-purple-50/40 border border-blue-100 rounded-xl">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label style={{ ...sans, fontSize: "10px", fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "#1e40af" }}
+                             className="flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5" /> Code promo
                       </label>
-                      <button
-                        onClick={resetPromoCode}
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                        title="Fermer"
-                      >
-                        <X className="w-4 h-4" />
+                      <button onClick={resetPromoCode} className="text-blue-400 hover:text-blue-700 transition-colors">
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    
                     <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Votre code confidentiel"
-                        className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        disabled={verifying}
-                        autoFocus
-                      />
-                      <button
-                        onClick={verifyPromoCode}
-                        disabled={verifying || !promoCode.trim()}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {verifying ? '...' : 'Vérifier'}
+                      <input type="text" value={promoCode}
+                             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                             onKeyPress={handleKeyPress}
+                             placeholder="Votre code confidentiel"
+                             style={{ ...sans, fontSize: "12px", fontWeight: 300, letterSpacing: "0.08em" }}
+                             className="flex-1 px-3 py-2 border border-blue-200 rounded-lg bg-white focus:ring-2 focus:ring-amber-300/40 focus:border-amber-400 outline-none transition-all"
+                             disabled={verifying} autoFocus />
+                      <button onClick={verifyPromoCode} disabled={verifying || !promoCode.trim()}
+                              style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.10em", textTransform: "uppercase" }}
+                              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        {verifying ? '···' : 'OK'}
                       </button>
                     </div>
-
-                    {/* Message d'erreur ou succès */}
                     {promoError && (
-                      <div className="flex items-center gap-2 text-red-600 text-sm animate-pulse">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>{promoError}</span>
+                      <div style={{ ...sans, fontSize: "10px" }} className="flex items-center gap-1.5 text-red-500">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {promoError}
                       </div>
                     )}
-                    
                     {verifiedPromo && (
-                      <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
-                        <Check className="w-4 h-4 flex-shrink-0" />
-                        <span>Code appliqué ! Économie de {formatPrice(verifiedPromo.economie)}</span>
+                      <div style={{ ...sans, fontSize: "10px", fontWeight: 500 }} className="flex items-center gap-1.5 text-green-600">
+                        <Check className="w-3.5 h-3.5 flex-shrink-0" /> Code appliqué ! Économie de {formatPrice(verifiedPromo.economie)}
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* ✅ BOUTONS D'ACTION - MÊME LOGIQUE QUE ROOMCARD */}
+                {/* Boutons action */}
                 <div className="flex gap-2">
-                  {/* BOUTON CODE PROMO UNIQUEMENT SI LA CHAMBRE A DES PROMOS */}
                   {hasActivePromos && (
-                    <button
-                      onClick={() => {
-                        setShowPromoInput(!showPromoInput)
-                        if (showPromoInput) resetPromoCode()
-                      }}
-                      className={`flex-1 py-3 px-4 rounded-lg text-center text-sm font-medium transition-all ${
-                        showPromoInput 
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
-                          : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-md'
-                      }`}
-                    >
-                      {showPromoInput ? 'Annuler' : '🎁 Code Promo'}
+                    <button onClick={() => { setShowPromoInput(!showPromoInput); if (showPromoInput) resetPromoCode() }}
+                            style={{ ...sans, fontSize: "9px", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" }}
+                            className={`flex-1 py-2.5 px-3 rounded-xl transition-all duration-200 ${
+                              showPromoInput
+                                ? 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-sm'
+                            }`}>
+                      {showPromoInput ? 'Annuler' : '🎁 Code'}
                     </button>
                   )}
-                  
-                  {/* ✅ BOUTON RÉSERVER - TOUJOURS LE MÊME STYLE */}
-                  <button
-                    onClick={handleReservationClick}
-                    disabled={room.status !== 'disponible'}
-                    className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-3 px-4 rounded-lg text-center text-sm font-medium transition-all ${
-                      room.status === 'disponible'
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {room.status === 'disponible' ? 'Réserver maintenant' : 'Indisponible'}
+                  <button onClick={handleReservationClick} disabled={room.status !== 'disponible'}
+                          style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
+                          className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-2.5 px-4 rounded-xl transition-all duration-200 ${
+                            room.status === 'disponible'
+                              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}>
+                    {room.status === 'disponible' ? 'Réserver' : 'Indisponible'}
                   </button>
                 </div>
 
-                {/* ✅ INDICATEUR DE PRIX FINAL UNIQUEMENT SI CODE APPLIQUÉ */}
                 {verifiedPromo && room.status === 'disponible' && (
-                  <div className="mt-3 text-center">
-                    <div className="text-xs text-gray-500">
-                      Prix final: <span className="font-bold text-orange-600 text-sm">{formatPrice(displayPrice)}</span>
-                      <span className="text-green-600 ml-2">
-                        (Économie: {formatPrice(verifiedPromo.economie)})
-                      </span>
-                    </div>
-                  </div>
+                  <p style={{ ...sans, fontSize: "10px", textAlign: "center", color: "#9ca3af", marginTop: 10 }}>
+                    Prix final :{' '}
+                    <span style={{ ...serif, fontSize: "16px", color: "#ea580c", fontWeight: 400 }}>{formatPrice(displayPrice)}</span>
+                    <span className="text-green-600 ml-2">(économie : {formatPrice(verifiedPromo.economie)})</span>
+                  </p>
                 )}
               </div>
 
-              {/* ✅ SECTION INFORMATIONS COMPLÉMENTAIRES */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-semibold text-gray-900 mb-4">Informations</h3>
+              {/* Infos chambre */}
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                <h3 style={{ ...serif, fontWeight: 500, fontSize: "17px" }} className="text-gray-900 mb-1">
+                  Informations
+                </h3>
+                <div style={{ width: 14, height: 1, background: "rgba(212,160,51,0.4)", marginBottom: 14 }} />
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-500">Capacité</p>
-                      <p className="font-medium">{room.capacity} personnes</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Bed className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-500">Type de lit</p>
-                      <p className="font-medium capitalize">{room.bedType?.replace('_', ' ')}</p>
-                    </div>
-                  </div>
-
-                  {room.size && (
-                    <div className="flex items-center gap-3">
-                      <Ruler className="w-5 h-5 text-blue-600" />
+                  {[
+                    { icon: <Users className="w-4 h-4 text-blue-500" />, label: "Capacité", value: `${room.capacity} personnes` },
+                    { icon: <Bed className="w-4 h-4 text-blue-500" />, label: "Type de lit", value: room.bedType?.replace('_', ' '), capitalize: true },
+                    ...(room.size ? [{ icon: <Ruler className="w-4 h-4 text-blue-500" />, label: "Surface", value: room.size }] : []),
+                    { icon: <span style={{ fontSize: "14px" }}>🏷️</span>, label: "Statut", value: room.status === 'disponible' ? 'Disponible' : 'Indisponible', color: room.status === 'disponible' ? '#16a34a' : '#ef4444' },
+                  ].map(({ icon, label, value, capitalize, color }) => (
+                    <div key={label} className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">{icon}</div>
                       <div>
-                        <p className="text-sm text-gray-500">Surface</p>
-                        <p className="font-medium">{room.size}</p>
+                        <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9ca3af" }}>{label}</p>
+                        <p style={{ ...sans, fontSize: "13px", fontWeight: 400, color: color || "#111", textTransform: capitalize ? "capitalize" : undefined }}>
+                          {value}
+                        </p>
                       </div>
                     </div>
-                  )}
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      <span className="text-blue-600 text-lg">🏷️</span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Statut</p>
-                      <p className={`font-medium ${
-                        room.status === 'disponible' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {room.status === 'disponible' ? 'Disponible' : 'Indisponible'}
-                      </p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* DESCRIPTION ET CARACTÉRISTIQUES - EN DESSOUS */}
-        <div className="grid lg:grid-cols-2 gap-8 mt-12">
-          {/* Description */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-700 leading-relaxed text-lg">{room.description}</p>
+        {/* Description + caractéristiques */}
+        <div className="grid lg:grid-cols-2 gap-7 mt-12">
+          <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100">
+            <h2 style={{ ...serif, fontWeight: 300, fontSize: "26px", letterSpacing: "0.03em" }} className="text-gray-900 mb-1">
+              Description
+            </h2>
+            <div style={{ width: 18, height: 1, background: "rgba(212,160,51,0.45)", marginBottom: 14 }} />
+            <p style={{ ...sans, fontSize: "14px", fontWeight: 300, lineHeight: 1.8, color: "#374151" }}>
+              {room.description}
+            </p>
           </div>
 
-          {/* Caractéristiques */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Caractéristiques</h3>
-            <div className="grid gap-4">
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-500">Capacité</p>
-                  <p className="font-semibold text-lg">{room.capacity} personnes</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                <Bed className="w-6 h-6 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-500">Type de lit</p>
-                  <p className="font-semibold text-lg capitalize">{room.bedType?.replace('_', ' ')}</p>
-                </div>
-              </div>
-
-              {room.size && (
-                <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                  <Ruler className="w-6 h-6 text-blue-600" />
+          <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100">
+            <h3 style={{ ...serif, fontWeight: 300, fontSize: "26px", letterSpacing: "0.03em" }} className="text-gray-900 mb-1">
+              Caractéristiques
+            </h3>
+            <div style={{ width: 18, height: 1, background: "rgba(212,160,51,0.45)", marginBottom: 14 }} />
+            <div className="grid gap-3">
+              {[
+                { icon: <Users className="w-5 h-5 text-blue-500" />, label: "Capacité", value: `${room.capacity} personnes` },
+                { icon: <Bed className="w-5 h-5 text-blue-500" />, label: "Type de lit", value: room.bedType?.replace('_', ' '), capitalize: true },
+                ...(room.size ? [{ icon: <Ruler className="w-5 h-5 text-blue-500" />, label: "Surface", value: room.size }] : []),
+              ].map(({ icon, label, value, capitalize }) => (
+                <div key={label} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+                  {icon}
                   <div>
-                    <p className="text-sm text-gray-500">Surface</p>
-                    <p className="font-semibold text-lg">{room.size}</p>
+                    <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#9ca3af" }}>{label}</p>
+                    <p style={{ ...serif, fontWeight: 400, fontSize: "18px", color: "#111", textTransform: capitalize ? "capitalize" : undefined }}>
+                      {value}
+                    </p>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Équipements - PLEINE LARGEUR */}
+        {/* Équipements */}
         {room.amenities && room.amenities.length > 0 && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mt-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Équipements & Services</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 mt-7">
+            <h3 style={{ ...serif, fontWeight: 300, fontSize: "26px", letterSpacing: "0.03em" }} className="text-gray-900 mb-1">
+              Équipements &amp; Services
+            </h3>
+            <div style={{ width: 18, height: 1, background: "rgba(212,160,51,0.45)", marginBottom: 18 }} />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {room.amenities.map((amenity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium text-gray-700">{amenity}</span>
+                <div key={index}
+                     className="flex items-center gap-2.5 p-3 bg-gray-50 rounded-xl hover:bg-blue-50/50 transition-colors">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full flex-shrink-0" />
+                  <span style={{ ...sans, fontSize: "12px", fontWeight: 300, color: "#374151" }}>{amenity}</span>
                 </div>
               ))}
             </div>

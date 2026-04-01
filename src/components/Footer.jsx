@@ -1,61 +1,67 @@
+// ══════════════════════════════════════════════════
+// src/components/Footer.jsx — LUXE HÔTELIÈRE
+// ══════════════════════════════════════════════════
 import React from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Crown, Star, Shield } from "lucide-react";
 
+const serif = { fontFamily: "'Cormorant Garamond', serif" };
+const sans  = { fontFamily: "'Montserrat', sans-serif" };
+
 export default function Footer() {
   return (
-    <footer className="relative bg-gradient-to-br from-blue-900 via-purple-500 to-purple-900 text-white pt-12 pb-6 overflow-hidden">
-      {/* Effet de fond avec des éléments décoratifs */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
-      
-      {/* Éléments décoratifs */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-blue-600/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
-      
+    <footer className="relative bg-gradient-to-br from-blue-900 via-purple-500 to-purple-900 text-white pt-14 pb-6 overflow-hidden">
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      <div className="absolute top-0 left-0 w-72 h-72 bg-blue-600/10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl" />
+
       <div className="container-max relative z-10">
-        {/* Section principale */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
-          {/* Colonne Logo et Description */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10 mb-10">
+
+          {/* Logo + description */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-5">
               <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-white to-blue-100 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Crown className="w-6 h-6 text-blue-600" />
+                <div className="w-11 h-11 bg-gradient-to-br from-white to-blue-100 rounded-xl flex items-center justify-center shadow-lg">
+                  <Crown className="w-5 h-5 text-blue-600" />
                 </div>
-                <Star className="w-4 h-4 text-yellow-400 absolute -top-1 -right-1 fill-yellow-400" />
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 absolute -top-1 -right-1" />
               </div>
-              <h4 className="font-serif text-2xl bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <h4 style={{ ...serif, fontWeight: 300, fontSize: "22px", letterSpacing: "0.08em" }}
+                  className="text-white">
                 Grand Hôtel
               </h4>
             </div>
-            <p className="text-blue-100/90 text-lg leading-relaxed mb-6 max-w-md">
+
+            <p style={{ ...sans, fontSize: "13px", fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1.75 }}
+               className="text-blue-100/80 mb-6 max-w-sm">
               Confort et élégance à deux pas de l'aéroport. Service 24/7, navette
               et business center pour un séjour d'exception.
             </p>
-            
-            {/* Badges de confiance */}
+
             <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-                <Shield className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-medium text-white">Sécurité</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm font-medium text-white">Luxe</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-white">✓</span>
+              {[
+                { icon: <Shield className="w-3.5 h-3.5 text-green-400" />, label: "Sécurité" },
+                { icon: <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />, label: "Luxe" },
+                { icon: <div className="w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center"><span className="text-white" style={{ fontSize: "8px" }}>✓</span></div>, label: "24/7" },
+              ].map(({ icon, label }) => (
+                <div key={label}
+                     className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-xl border border-white/20">
+                  {icon}
+                  <span style={{ ...sans, fontSize: "10px", fontWeight: 500, letterSpacing: "0.12em" }}
+                        className="text-white">
+                    {label}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-white">24/7</span>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Colonne Liens rapides */}
+          {/* Navigation */}
           <div>
-            <h5 className="font-bold text-lg mb-6 text-white flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <h5 style={{ ...serif, fontWeight: 500, fontSize: "17px", letterSpacing: "0.06em" }}
+                className="text-white mb-5 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
               Navigation
             </h5>
             <ul className="space-y-3">
@@ -64,14 +70,16 @@ export default function Footer() {
                 { to: "/about", label: "À propos" },
                 { to: "/contact", label: "Contact" },
                 { to: "/my-reservations", label: "Mes Réservations" },
-                { to: "/booking", label: "Réserver" }
+                { to: "/booking", label: "Réserver" },
               ].map((link) => (
                 <li key={link.to}>
-                  <Link 
+                  <Link
                     to={link.to}
-                    className="text-blue-100/80 hover:text-white transition-all duration-300 hover:translate-x-2 flex items-center gap-2 group"
+                    style={{ ...sans, fontSize: "12px", fontWeight: 300, letterSpacing: "0.06em" }}
+                    className="text-blue-100/70 hover:text-white transition-all duration-300
+                      hover:translate-x-1.5 flex items-center gap-2 group"
                   >
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="w-1 h-1 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     {link.label}
                   </Link>
                 </li>
@@ -79,77 +87,71 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Colonne Contact */}
+          {/* Contact */}
           <div>
-            <h5 className="font-bold text-lg mb-6 text-white flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+            <h5 style={{ ...serif, fontWeight: 500, fontSize: "17px", letterSpacing: "0.06em" }}
+                className="text-white mb-5 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
               Nous Contacter
             </h5>
             <div className="space-y-4">
-              <div className="flex items-center gap-3 group">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                  <MapPin className="w-5 h-5 text-blue-300" />
+              {[
+                { icon: <MapPin className="w-4 h-4 text-blue-300" />, bg: "bg-blue-500/20", label: "A 4km de l'aéroport de", value: "Douala, Cameroun" },
+                { icon: <Phone className="w-4 h-4 text-purple-300" />, bg: "bg-purple-500/20", label: "Téléphone", value: "(+237) 699 901 204" },
+                { icon: <Mail className="w-4 h-4 text-green-300" />, bg: "bg-green-500/20", label: "Email", value: "aeroport@mygrandhotel.com" },
+              ].map(({ icon, bg, label, value }) => (
+                <div key={label} className="flex items-center gap-3 group">
+                  <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    {icon}
+                  </div>
+                  <div>
+                    <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase" }}
+                       className="text-blue-100/50">
+                      {label}
+                    </p>
+                    <p style={{ ...sans, fontSize: "12px", fontWeight: 400 }} className="text-white">
+                      {value}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-blue-100/90 text-sm">A 4km de l'aéroport de</p>
-                  <p className="text-white font-medium">Douala, Cameroun</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 group">
-                <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                  <Phone className="w-5 h-5 text-purple-300" />
-                </div>
-                <div>
-                  <p className="text-blue-100/90 text-sm">Téléphone</p>
-                  <p className="text-white font-medium"> (+237) 699 901 204</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 group">
-                <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
-                  <Mail className="w-5 h-5 text-green-300" />
-                </div>
-                <div>
-                  <p className="text-blue-100/90 text-sm">Email</p>
-                  <p className="text-white font-medium"> aeroport@mygrandhotel.com</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Séparateur */}
-        <div className="border-t border-white/20 my-8"></div>
+        <div className="border-t border-white/15 my-6" />
 
-        {/* Section basse */}
+        {/* Bas de page */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
-            <p className="text-blue-100/70 text-sm">
+            <p style={{ ...sans, fontSize: "11px", fontWeight: 300, letterSpacing: "0.06em" }}
+               className="text-blue-100/60">
               © {new Date().getFullYear()} Grand Hôtel Aéroport. Tous droits réservés.
             </p>
-            <p className="text-blue-100/50 text-xs mt-1">
+            <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.12em" }}
+               className="text-blue-100/40 mt-1">
               L'excellence hôtelière réinventée
             </p>
           </div>
-          
-          {/* Liens légaux */}
-          <div className="flex flex-wrap gap-6 text-sm">
-            <Link to="/privacy" className="text-blue-100/70 hover:text-white transition-colors">
-              Confidentialité
-            </Link>
-            <Link to="/terms" className="text-blue-100/70 hover:text-white transition-colors">
-              Conditions
-            </Link>
-            <Link to="/cookies" className="text-blue-100/70 hover:text-white transition-colors">
-              Cookies
-            </Link>
+
+          <div className="flex flex-wrap gap-5">
+            {[
+              { to: "/privacy", label: "Confidentialité" },
+              { to: "/terms", label: "Conditions" },
+              { to: "/cookies", label: "Cookies" },
+            ].map(({ to, label }) => (
+              <Link key={to} to={to}
+                    style={{ ...sans, fontSize: "10px", letterSpacing: "0.14em" }}
+                    className="text-blue-100/55 hover:text-white transition-colors">
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Élément décoratif bas */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-30"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
     </footer>
   );
 }

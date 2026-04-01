@@ -1,9 +1,33 @@
-// pages/PaymentCancel.jsx - PAGE D'ANNULATION
+// ══════════════════════════════════════════════════
+// pages/PaymentCancel.jsx — LUXE HÔTELIÈRE
+// ══════════════════════════════════════════════════
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { XCircle, Home, ArrowLeft, Phone, Mail } from 'lucide-react';
 
-const PaymentCancel = () => {
+const serif = { fontFamily: "'Cormorant Garamond', serif" };
+const sans  = { fontFamily: "'Montserrat', sans-serif" };
+
+const BtnPrimary = ({ onClick, children, style = {} }) => (
+  <button onClick={onClick}
+          style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "#1a1208", background: "linear-gradient(135deg,#e8c97a,#d4a033)", padding: "13px 0", borderRadius: "32px", border: "none", cursor: "pointer", width: "100%", boxShadow: "0 2px 14px rgba(212,160,51,0.24)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, ...style }}>
+    {children}
+  </button>
+);
+const BtnBlue = ({ onClick, children }) => (
+  <button onClick={onClick}
+          style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fff", background: "#2563eb", padding: "13px 0", borderRadius: "32px", border: "none", cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+    {children}
+  </button>
+);
+const BtnOutline = ({ onClick, children }) => (
+  <button onClick={onClick}
+          style={{ ...sans, fontSize: "10px", fontWeight: 400, letterSpacing: "0.14em", textTransform: "uppercase", color: "#374151", background: "#f9fafb", border: "1px solid #e5e7eb", padding: "13px 0", borderRadius: "32px", cursor: "pointer", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+    {children}
+  </button>
+);
+
+export const PaymentCancel = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const reservationId = searchParams.get('reservation');
@@ -12,111 +36,87 @@ const PaymentCancel = () => {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-md mx-auto">
         {/* En-tête */}
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center mb-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-100 rounded-full mb-4">
-            <XCircle className="w-12 h-12 text-orange-600" />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center mb-5">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <XCircle className="w-9 h-9 text-orange-500" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 style={{ ...serif, fontWeight: 300, fontSize: "30px", letterSpacing: "0.03em" }}
+              className="text-gray-900 mb-2">
             Paiement Annulé
           </h1>
-          <p className="text-gray-600">
+          <p style={{ ...sans, fontSize: "13px", fontWeight: 300, color: "#9ca3af" }}>
             Vous avez annulé le processus de paiement
           </p>
           {reservationId && (
-            <p className="text-sm text-gray-500 mt-2">
-              Réservation : <code className="bg-gray-100 px-2 py-1 rounded text-xs">{reservationId}</code>
+            <p style={{ ...sans, fontSize: "10px", color: "#9ca3af", marginTop: 8 }}>
+              Réservation : <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{reservationId}</code>
             </p>
           )}
         </div>
 
-        {/* Informations */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-900">
-            <strong>Votre réservation est toujours en attente</strong>
-            <br />
-            Aucun montant n'a été débité de votre compte. Vous pouvez réessayer le paiement à tout moment ou faire une nouvelle réservation.
+        {/* Info */}
+        <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 mb-4">
+          <p style={{ ...sans, fontSize: "11px", color: "#1e40af" }}>
+            <strong>Votre réservation est toujours en attente</strong><br />
+            <span style={{ fontWeight: 300 }}>Aucun montant n'a été débité. Vous pouvez réessayer à tout moment.</span>
           </p>
         </div>
 
-        {/* Raisons possibles */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-          <p className="font-semibold text-gray-900 mb-2">Raisons courantes d'annulation :</p>
-          <ul className="text-sm text-gray-600 space-y-1">
-            <li>• Je veux vérifier les détails de ma réservation</li>
-            <li>• Je préfère utiliser une autre carte</li>
-            <li>• J'ai besoin de plus de temps pour décider</li>
-            <li>• Je veux modifier mes dates de séjour</li>
-            <li>• J'ai changé d'avis</li>
+        {/* Raisons */}
+        <div className="bg-gray-50 rounded-xl p-4 mb-5 border border-gray-100">
+          <p style={{ ...serif, fontWeight: 500, fontSize: "16px" }} className="text-gray-900 mb-2">
+            Raisons courantes d'annulation
+          </p>
+          <ul className="space-y-1">
+            {[
+              "Je veux vérifier les détails de ma réservation",
+              "Je préfère utiliser une autre carte",
+              "J'ai besoin de plus de temps pour décider",
+              "Je veux modifier mes dates de séjour",
+              "J'ai changé d'avis",
+            ].map((item) => (
+              <li key={item} style={{ ...sans, fontSize: "11px", fontWeight: 300, color: "#6b7280" }}>• {item}</li>
+            ))}
           </ul>
         </div>
 
         {/* Actions */}
         <div className="space-y-3">
           {reservationId && (
-            <button
-              onClick={() => navigate(`/booking?room=${reservationId}`)}
-              className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Retour au paiement
-            </button>
+            <BtnPrimary onClick={() => navigate(`/booking?room=${reservationId}`)}>
+              <ArrowLeft className="w-4 h-4" /> Retour au paiement
+            </BtnPrimary>
           )}
-          
-          <button
-            onClick={() => navigate('/booking')}
-            className="w-full bg-white border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors font-semibold"
-          >
-            Faire une nouvelle réservation
-          </button>
-          
-          <button
-            onClick={() => navigate('/rooms')}
-            className="w-full bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Choisir une autre chambre
-          </button>
-          
-          <button
-            onClick={() => navigate('/')}
-            className="w-full flex items-center justify-center space-x-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <Home className="w-5 h-5" />
-            <span>Retour à l'accueil</span>
-          </button>
+          <BtnBlue onClick={() => navigate('/booking')}>Faire une nouvelle réservation</BtnBlue>
+          <BtnOutline onClick={() => navigate('/rooms')}>Choisir une autre chambre</BtnOutline>
+          <BtnOutline onClick={() => navigate('/')}><Home className="w-4 h-4" /> Retour à l'accueil</BtnOutline>
         </div>
 
         {/* Support */}
-        <div className="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <h4 className="font-semibold text-gray-900 mb-2">
-            Besoin d'aide pour finaliser votre réservation ?
+        <div className="mt-5 bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <h4 style={{ ...serif, fontWeight: 500, fontSize: "16px" }} className="text-gray-900 mb-3">
+            Besoin d'aide pour finaliser ?
           </h4>
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex items-center">
-              <Phone className="w-4 h-4 mr-2 text-blue-600" />
-              <a href="tel:+237656708074" className="text-blue-600 hover:underline font-medium">
-                +237 656 708 074
-              </a>
-            </div>
-            <div className="flex items-center">
-              <Mail className="w-4 h-4 mr-2 text-blue-600" />
-              <a href="mailto:contact@grandhotel.com" className="text-blue-600 hover:underline font-medium">
-                contact@grandhotel.com
-              </a>
-            </div>
+          <div className="space-y-2">
+            {[
+              { icon: <Phone className="w-3.5 h-3.5 text-blue-500" />, href: "tel:+237656708074", label: "+237 656 708 074" },
+              { icon: <Mail className="w-3.5 h-3.5 text-blue-500" />, href: "mailto:contact@grandhotel.com", label: "contact@grandhotel.com" },
+            ].map(({ icon, href, label }) => (
+              <div key={href} className="flex items-center gap-2">
+                {icon}
+                <a href={href} style={{ ...sans, fontSize: "12px", fontWeight: 400, color: "#2563eb" }}>{label}</a>
+              </div>
+            ))}
           </div>
-          <p className="text-xs text-gray-500 mt-3">
+          <p style={{ ...sans, fontSize: "10px", color: "#9ca3af", marginTop: 8 }}>
             Notre équipe est disponible 24/7 pour vous assister
           </p>
         </div>
 
-        {/* Note informative */}
-        <div className="mt-4 text-center text-xs text-gray-500">
-          <p>
-            Votre réservation restera en attente pendant <strong>24 heures</strong>.
-            <br />
-            Passé ce délai, elle sera automatiquement annulée.
-          </p>
-        </div>
+        <p style={{ ...sans, fontSize: "10px", textAlign: "center", color: "#9ca3af", marginTop: 14 }}>
+          Votre réservation restera en attente pendant <strong>24 heures</strong>.<br />
+          Passé ce délai, elle sera automatiquement annulée.
+        </p>
       </div>
     </div>
   );
