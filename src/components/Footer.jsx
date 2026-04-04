@@ -29,13 +29,13 @@ export default function Footer() {
               </div>
               <h4 style={{ ...serif, fontWeight: 300, fontSize: "22px", letterSpacing: "0.08em" }}
                   className="text-white">
-                Grand Hôtel
+                Grand Hôtel Akwa
               </h4>
             </div>
 
             <p style={{ ...sans, fontSize: "13px", fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1.75 }}
                className="text-blue-100/80 mb-6 max-w-sm">
-              Confort et élégance à deux pas de l'aéroport. Service 24/7, navette
+              Confort et élégance en plein Coeur du centre des affaires d'Akwa. Service 24/7, navette
               et business center pour un séjour d'exception.
             </p>
 
@@ -97,8 +97,8 @@ export default function Footer() {
             <div className="space-y-4">
               {[
                 { icon: <MapPin className="w-4 h-4 text-blue-300" />, bg: "bg-blue-500/20", label: "A 4km de l'aéroport de", value: "Douala, Cameroun" },
-                { icon: <Phone className="w-4 h-4 text-purple-300" />, bg: "bg-purple-500/20", label: "Téléphone", value: "(+237) 699 901 204" },
-                { icon: <Mail className="w-4 h-4 text-green-300" />, bg: "bg-green-500/20", label: "Email", value: "aeroport@mygrandhotel.com" },
+                { icon: <Phone className="w-4 h-4 text-purple-300" />, bg: "bg-purple-500/20", label: "Téléphone", value: "(+237) 699 45 76 55" },
+                { icon: <Mail className="w-4 h-4 text-green-300" />, bg: "bg-green-500/20", label: "Email", value: "akwa@a-grandhotels.com" },
               ].map(({ icon, bg, label, value }) => (
                 <div key={label} className="flex items-center gap-3 group">
                   <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -127,7 +127,7 @@ export default function Footer() {
           <div className="text-center md:text-left">
             <p style={{ ...sans, fontSize: "11px", fontWeight: 300, letterSpacing: "0.06em" }}
                className="text-blue-100/60">
-              © {new Date().getFullYear()} Grand Hôtel Aéroport. Tous droits réservés.
+              © {new Date().getFullYear()} Grand Hôtel Akwa. Tous droits réservés.
             </p>
             <p style={{ ...sans, fontSize: "9px", letterSpacing: "0.12em" }}
                className="text-blue-100/40 mt-1">
