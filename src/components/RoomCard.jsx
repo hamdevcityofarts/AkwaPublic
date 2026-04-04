@@ -33,7 +33,7 @@ const RoomCard = ({ room }) => {
       if (!room?._id) return
       setLoadingPromos(true)
       try {
-        const response = await promoCodesService.getRoomPromos(room._id)
+        const response = await promoCodesService.getRoomPromos(room._id, room.price);
         if (response.success && response.availablePromos)
           setRoomPromos(response.availablePromos)
       } catch (error) {
@@ -58,7 +58,7 @@ const RoomCard = ({ room }) => {
     if (!promoCode.trim()) { setPromoError('Veuillez entrer un code promo'); return }
     setVerifying(true); setPromoError('')
     try {
-      const response = await promoCodesService.verifyCodePromo(promoCode, room._id, 1)
+      const response = await promoCodesService.verifyCodePromo(promoCode, room._id, 1, null, null, room.price);
       if (response.success) {
         setVerifiedPromo(response.codePromo); setPromoError('')
         showNotification(`🎉 Code appliqué ! Économie de ${formatPrice(response.codePromo.economie)}`, 'success')
