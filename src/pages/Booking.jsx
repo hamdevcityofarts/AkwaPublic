@@ -458,9 +458,16 @@ export default function Booking() {
           <select name="roomId" value={form.roomId} onChange={handleChange} required
                   style={{ ...sans, fontSize: "13px", fontWeight: 300 }} className={fieldClass}>
             <option value="">Sélectionnez une chambre</option>
-            {rooms.map(room => (
-              <option key={room._id} value={room._id}>{room.name} — {formatPrice(room.price)}/nuit</option>
-            ))}
+           {rooms.map(room => {
+  const isSelectedWithPromo = activePromo && form.roomId === room._id && activePromo.prixReduit;
+  return (
+    <option key={room._id} value={room._id}>
+      {room.name} — {isSelectedWithPromo
+        ? `${formatPrice(activePromo.prixReduit)}/nuit (promo)`
+        : `${formatPrice(room.price)}/nuit`}
+    </option>
+  );
+})}
           </select>
         </div>
 
