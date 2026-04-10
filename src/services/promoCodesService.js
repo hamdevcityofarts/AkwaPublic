@@ -140,6 +140,24 @@ export const getActivePromos = async () => {
   }
 };
 
+// ✅ NOUVEAU — Codes promo dont l'utilisateur est titulaire
+export const getMyCodes = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/codepromo/my`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('❌ Erreur récupération mes codes promo:', error);
+    throw error;
+  }
+};
+
 // ✅ MÉTHODES UTILITAIRES
 export const calculateDiscount = (originalPrice, discountType, discountValue) => {
   if (!originalPrice || !discountValue) return 0;
@@ -187,7 +205,7 @@ export const testConnection = async () => {
 
 const promoCodesService = {
   getCodesPromo, verifyCodePromo, getPromoCodeStats,
-  getActivePromos, getRoomPromos, calculateDiscount,
+  getActivePromos, getRoomPromos, getMyCodes, calculateDiscount,
   formatDiscount, formatAmount, isCodeExpired, isCodeActive, testConnection
 };
 

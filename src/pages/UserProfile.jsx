@@ -23,6 +23,7 @@ const UserProfile = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [localError, setLocalError] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasPromoCodes, setHasPromoCodes] = useState(false);
 
   useEffect(() => {
     return () => { dispatch(clearError()); };
@@ -34,6 +35,18 @@ const UserProfile = () => {
       setIsInitialized(true);
     }
   }, [user, isInitialized]);
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur a des codes promo
+    const checkPromoCodes = async () => {
+      try {
+        const result = await import('../services/promoCodesService')
+          .then(m => m.getMyCodes());
+        setHasPromoCodes((result.codesPromo || []).length > 0);
+      } catch { /* silencieux */ }
+    };
+    if (user) checkPromoCodes();
+  }, [user]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -73,6 +86,31 @@ const UserProfile = () => {
       </div>
     );
   }
+
+  const secondaryActions = [
+    {
+      onClick: () => navigate('/change-password'),
+      iconBg: "bg-amber-100",
+      icon: (
+        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      ),
+      title: "Changer le mot de passe",
+      sub: "Mettez à jour votre mot de passe"
+    },
+    {
+      onClick: () => navigate('/my-reservations'),
+      iconBg: "bg-green-100",
+      icon: (
+        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+      title: "Mes réservations",
+      sub: "Consultez votre historique"
+    },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -235,26 +273,7 @@ const UserProfile = () => {
 
         {/* Actions secondaires */}
         <div className="mt-5 grid md:grid-cols-2 gap-4">
-          {[
-            {
-              onClick: () => navigate('/change-password'),
-              iconBg: "bg-amber-100", icon: (
-                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>),
-              title: "Changer le mot de passe",
-              sub: "Mettez à jour votre mot de passe"
-            },
-            {
-              onClick: () => navigate('/my-reservations'),
-              iconBg: "bg-green-100", icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>),
-              title: "Mes réservations",
-              sub: "Consultez votre historique"
-            },
-          ].map(({ onClick, iconBg, icon, title, sub }) => (
+          {secondaryActions.map(({ onClick, iconBg, icon, title, sub }) => (
             <button key={title} onClick={onClick} disabled={isLoading}
                     className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-amber-300/50 transition-colors text-left shadow-sm group">
               <div className="flex items-center gap-3">
@@ -268,6 +287,25 @@ const UserProfile = () => {
               </div>
             </button>
           ))}
+          {hasPromoCodes && (
+            <button
+              onClick={() => navigate('/my-promo-codes')}
+              disabled={isLoading}
+              className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-purple-300/50 transition-colors text-left shadow-sm group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ ...serif, fontWeight: 500, fontSize: "16px" }} className="text-gray-900">Mes codes promo</h3>
+                  <p style={{ ...sans, fontSize: "11px", fontWeight: 300 }} className="text-gray-400">Suivez vos performances</p>
+                </div>
+              </div>
+            </button>
+          )}
         </div>
       </div>
     </div>

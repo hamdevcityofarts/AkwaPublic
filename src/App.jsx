@@ -19,6 +19,7 @@ import UserProfile from './pages/UserProfile'
 import ReservationDetails from './pages/ReservationDetails' // Nouvelle importation
 import ChangePassword from './pages/ChangePassword'
 import PrivacyPolicy  from './pages/PrivacyPolicy'
+import MyPromoCodes from './pages/MyPromoCodes'
 
 
 export default function App() {
@@ -81,6 +82,14 @@ export default function App() {
               </ProtectedRoute>
             } 
           />
+          <Route
+  path="/my-promo-codes"
+  element={
+    <ProtectedRoute>
+      <MyPromoCodes />
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </main>
       <Footer />
