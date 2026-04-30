@@ -1,7 +1,7 @@
 // src/components/RoomCard.jsx — VERSION LUXE HÔTELIÈRE
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Users, MapPin, Bed, Tag, Zap, X, Check, AlertCircle, Bell } from 'lucide-react'
+import { Users, MapPin, Bed, Tag, Zap, X, Check, AlertCircle, Bell, MessageCircle } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import ImageSlider from './ImageSlider'
 import roomsService from '../services/roomsService'
@@ -394,31 +394,31 @@ const RoomCard = ({ room }) => {
             </button>
           )}
 
-          {/* Bouton réserver — workflow basculable (WhatsApp temporaire / paiement original) */}
+          {/* Bouton réserver/WhatsApp — workflow basculable */}
           <button
-  onClick={handleReservationClick}
-  disabled={room.status !== 'disponible'}
-  style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
-  className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-2.5 px-4 rounded-xl
-    transition-all duration-200 flex items-center justify-center gap-2
-    ${room.status === 'disponible'
-      ? TEMPORARY_WHATSAPP_BOOKING
-        ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-sm hover:shadow-md'
-        : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md'
-      : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-  title={TEMPORARY_WHATSAPP_BOOKING && room.status === 'disponible' ? "Réservation temporaire via WhatsApp" : ""}
->
-  {room.status === 'disponible' && TEMPORARY_WHATSAPP_BOOKING ? (
-    <>
-      <WhatsApp className="w-3.5 h-3.5" />
-      <span>WhatsApp</span>
-    </>
-  ) : room.status === 'disponible' ? (
-    'Réserver'
-  ) : (
-    'Indisponible'
-  )}
-</button>
+            onClick={handleReservationClick}
+            disabled={room.status !== 'disponible'}
+            style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
+            className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-2.5 px-4 rounded-xl
+              transition-all duration-200 flex items-center justify-center gap-2
+              ${room.status === 'disponible'
+                ? TEMPORARY_WHATSAPP_BOOKING
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-sm hover:shadow-md'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+            title={TEMPORARY_WHATSAPP_BOOKING && room.status === 'disponible' ? "Réservation temporaire via WhatsApp" : ""}
+          >
+            {room.status === 'disponible' && TEMPORARY_WHATSAPP_BOOKING ? (
+              <>
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+              </>
+            ) : room.status === 'disponible' ? (
+              'Réserver'
+            ) : (
+              'Indisponible'
+            )}
+          </button>
         </div>
 
         {/* Prix final si promo */}
