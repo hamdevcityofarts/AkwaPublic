@@ -12,7 +12,7 @@ import promoCodesService from '../services/promoCodesService'
 // Désactiver pour réactiver le workflow paiement complet : REACT_APP_TEMPORARY_WHATSAPP_BOOKING=false
 const TEMPORARY_WHATSAPP_BOOKING = process.env.REACT_APP_TEMPORARY_WHATSAPP_BOOKING === 'true' || true
 // Numéro de téléphone de l'équipe de réception (format international sans le '+')
-const WHATSAPP_PHONE_NUMBER = process.env.REACT_APP_WHATSAPP_PHONE_NUMBER || '1234567890'
+const WHATSAPP_PHONE_NUMBER = process.env.REACT_APP_WHATSAPP_PHONE_NUMBER || '237699457655'
 // Template du message pré-rempli (peut être surchargé par variable d'environnement)
 const buildWhatsAppMessage = (room, typeLabel) => {
   const defaultMessage = `Bonjour, je souhaite réserver la chambre ${room.name} (${typeLabel}) - N°${room.number}. Capacité : ${room.capacity} personne(s). Merci de me contacter pour finaliser ma réservation.`
