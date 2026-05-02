@@ -15,7 +15,7 @@ const TEMPORARY_WHATSAPP_BOOKING = process.env.REACT_APP_TEMPORARY_WHATSAPP_BOOK
 const WHATSAPP_PHONE_NUMBER = process.env.REACT_APP_WHATSAPP_PHONE_NUMBER || '237699457655'
 // Template du message pré-rempli (peut être surchargé par variable d'environnement)
 const buildWhatsAppMessage = (room, typeLabel) => {
-  const defaultMessage = `Bonjour, je souhaite réserver la chambre ${room.name} (${typeLabel}) - N°${room.number}. Capacité : ${room.capacity} personne(s). Merci de me contacter pour finaliser ma réservation.`
+  const defaultMessage = `Bonjour, je souhaite réserver la chambre ${room.name} (${typeLabel}) - N°${room.number}. Capacité : ${room.capacity} personne(s). Merci de me repondre pour finaliser ma réservation.`
   return process.env.REACT_APP_WHATSAPP_MESSAGE || defaultMessage
 }
 
