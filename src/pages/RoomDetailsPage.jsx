@@ -19,7 +19,7 @@ const buildWhatsAppMessage = (room) => {
     standard:'Standard', superior:'Supérieure', deluxe:'Deluxe',
     suite:'Suite', family:'Familiale', executive:'Exécutive', presidential:'Présidentielle'
   }[type] || type)
-  const defaultMessage = `Bonjour, je souhaite réserver la chambre ${room.name} (${getTypeLabel(room.type)}) - N°${room.number}. Capacité : ${room.capacity} personne(s). Merci de me contacter pour finaliser ma réservation.`
+  const defaultMessage = `Bonjour, je souhaite réserver la chambre ${room.name} (${getTypeLabel(room.type)}) - N°${room.number}. Capacité : ${room.capacity} personne(s). Merci de me repondre pour finaliser ma réservation.`
   return process.env.REACT_APP_WHATSAPP_MESSAGE || defaultMessage
 }
 
