@@ -12,7 +12,7 @@ import promoCodesService from '../services/promoCodesService'
 
 // ── TEMPORARY WHATSAPP BYPASS (à désactiver après correction CyberSource) ──
 const TEMPORARY_WHATSAPP_BOOKING = process.env.REACT_APP_TEMPORARY_WHATSAPP_BOOKING === 'true' || true
-const WHATSAPP_PHONE_NUMBER = process.env.REACT_APP_WHATSAPP_PHONE_NUMBER || '1234567890'
+const WHATSAPP_PHONE_NUMBER = process.env.REACT_APP_WHATSAPP_PHONE_NUMBER || '237699457655'
 
 const buildWhatsAppMessage = (room) => {
   const getTypeLabel = (type) => ({
