@@ -127,10 +127,9 @@ export default function Home() {
 
   const services = [
     { icon: <Car className="w-5 h-5" />, title: "Navette Aéroport", description: "Service gratuit 24/7 vers l'aéroport international de Douala", color: "from-blue-500 to-blue-600" },
-    { icon: <Wifi className="w-5 h-5" />, title: "WiFi Haut Débit", description: "Connexion fibre optique dans tout l'hôtel", color: "from-green-500 to-green-600" },
-    { icon: <Coffee className="w-5 h-5" />, title: "Petit-déjeuner", description: "Buffet international inclus", color: "from-amber-500 to-amber-600" },
-    { icon: <Dumbbell className="w-5 h-5" />, title: "Fitness Center", description: "Salle de sport équipée 24h/24", color: "from-red-500 to-red-600" },
-    { icon: <Utensils className="w-5 h-5" />, title: "Restaurant Gastronomique", description: "Cuisine locale et internationale", color: "from-purple-500 to-purple-600" },
+    { icon: <Wifi className="w-5 h-5" />, title: "WiFi Haut Débit", description: "Connexion internet Star Link dans tout l'hôtel", color: "from-green-500 to-green-600" },
+    { icon: <Coffee className="w-5 h-5" />, title: "Petit-déjeuner", description: "Petit-déjeuner inclus", color: "from-amber-500 to-amber-600" },
+   /* { icon: <Utensils className="w-5 h-5" />, title: "Restaurant Gastronomique", description: "Cuisine locale et internationale", color: "from-purple-500 to-purple-600" },*/
     { icon: <Shield className="w-5 h-5" />, title: "Sécurité 24/7", description: "Surveillance et coffre-fort", color: "from-gray-500 to-gray-600" },
   ];
 
