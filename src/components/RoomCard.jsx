@@ -1,25 +1,20 @@
 // src/components/RoomCard.jsx — VERSION LUXE HÔTELIÈRE
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Users, MapPin, Bed, Tag, Zap, X, Check, AlertCircle, Bell, MessageCircle } from 'lucide-react'
+import { Users, MapPin, Bed, Tag, Zap, X, Check, AlertCircle, Bell, MessageCircle, CreditCard } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import ImageSlider from './ImageSlider'
 import roomsService from '../services/roomsService'
 import promoCodesService from '../services/promoCodesService'
 
-// ── TEMPORARY WHATSAPP BYPASS (à désactiver une fois l'intégration CyberSource rétablie) ──
-// Activer le mode temporaire : REACT_APP_TEMPORARY_WHATSAPP_BOOKING=true (défaut à true)
-// Désactiver pour réactiver le workflow paiement complet : REACT_APP_TEMPORARY_WHATSAPP_BOOKING=false
+// ── TEMPORARY WHATSAPP BYPASS ──
 const TEMPORARY_WHATSAPP_BOOKING = process.env.REACT_APP_TEMPORARY_WHATSAPP_BOOKING === 'true' || true
-// Numéro de téléphone de l'équipe de réception (format international sans le '+')
 const WHATSAPP_PHONE_NUMBER = process.env.REACT_APP_WHATSAPP_PHONE_NUMBER || '237699457655'
-// Template du message pré-rempli (peut être surchargé par variable d'environnement)
 const buildWhatsAppMessage = (room, typeLabel) => {
   const defaultMessage = `Bonjour, je souhaite réserver la chambre ${room.name} (${typeLabel}) - N°${room.number}. Capacité : ${room.capacity} personne(s). Merci de me repondre pour finaliser ma réservation.`
   return process.env.REACT_APP_WHATSAPP_MESSAGE || defaultMessage
 }
 
-// ── Constantes typo (cohérentes Navbar + Home) ──
 const serif = { fontFamily: "'Cormorant Garamond', serif" }
 const sans  = { fontFamily: "'Montserrat', sans-serif" }
 
@@ -45,7 +40,7 @@ const RoomCard = ({ room }) => {
       if (!room?._id) return
       setLoadingPromos(true)
       try {
-        const response = await promoCodesService.getRoomPromos(room._id, room.price);
+        const response = await promoCodesService.getRoomPromos(room._id, room.price)
         if (response.success && response.availablePromos)
           setRoomPromos(response.availablePromos)
       } catch (error) {
@@ -70,7 +65,7 @@ const RoomCard = ({ room }) => {
     if (!promoCode.trim()) { setPromoError('Veuillez entrer un code promo'); return }
     setVerifying(true); setPromoError('')
     try {
-      const response = await promoCodesService.verifyCodePromo(promoCode, room._id, 1, null, null, room.price);
+      const response = await promoCodesService.verifyCodePromo(promoCode, room._id, 1, null, null, room.price)
       if (response.success) {
         setVerifiedPromo(response.codePromo); setPromoError('')
         showNotification(`🎉 Code appliqué ! Économie de ${formatPrice(response.codePromo.economie)}`, 'success')
@@ -105,7 +100,7 @@ const RoomCard = ({ room }) => {
     }
   }
 
-  // ── Nouvelle redirection temporaire WhatsApp (sans altération de l'original) ──
+  // ── Redirection WhatsApp (conservée intacte) ──
   const whatsappRedirectHandler = (e) => {
     e.preventDefault(); e.stopPropagation()
     const typeLabel = getTypeLabel(room.type)
@@ -113,18 +108,24 @@ const RoomCard = ({ room }) => {
     const encodedMessage = encodeURIComponent(message)
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodedMessage}`
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-    // Notification optionnelle pour informer l'utilisateur du mode temporaire
     showNotification(`📱 Demande envoyée via WhatsApp pour la chambre ${room.name}`, 'info')
   }
 
-  // ── Point d'entrée unique du bouton : bascule selon le flag temporaire ──
+  // ── Point d'entrée bouton principal (bascule selon flag) ──
   const handleReservationClick = (e) => {
-    if (room.status !== 'disponible') return // Désactivé si chambre non disponible
+    if (room.status !== 'disponible') return
     if (TEMPORARY_WHATSAPP_BOOKING) {
       whatsappRedirectHandler(e)
     } else {
       originalReservationHandler(e)
     }
+  }
+
+  // ── ✅ NOUVEAU : Bouton CyberSource toujours disponible ──
+  const handleOnlinePaymentClick = (e) => {
+    e.preventDefault(); e.stopPropagation()
+    if (room.status !== 'disponible') return
+    originalReservationHandler(e)
   }
 
   const handleCardClick = (e) => {
@@ -165,11 +166,8 @@ const RoomCard = ({ room }) => {
       {/* ── Slider images ── */}
       <div className="relative h-52 overflow-hidden">
         <ImageSlider images={room.images} className="h-full" />
-
-        {/* Overlay dégradé bas */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
-        {/* Badge type */}
         <div className="absolute bottom-3 left-3 z-10">
           <span
             style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" }}
@@ -179,7 +177,6 @@ const RoomCard = ({ room }) => {
           </span>
         </div>
 
-        {/* Badge statut */}
         <div className="absolute top-3 left-3 z-10">
           <span
             style={{ ...sans, fontSize: "9px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}
@@ -189,7 +186,6 @@ const RoomCard = ({ room }) => {
           </span>
         </div>
 
-        {/* Badge promo */}
         {hasActivePromos && (
           <div className="absolute top-3 right-3 z-10">
             <span
@@ -202,7 +198,6 @@ const RoomCard = ({ room }) => {
           </div>
         )}
 
-        {/* Compteur photos */}
         {room.images && room.images.length > 1 && (
           <div
             style={{ ...sans, fontSize: "9px", letterSpacing: "0.10em" }}
@@ -225,14 +220,12 @@ const RoomCard = ({ room }) => {
             >
               {room.name}
             </h3>
-            {/* Trait doré sous le titre */}
             <div style={{ width: 20, height: 1, background: "rgba(212,160,51,0.45)", marginBottom: 4 }} />
             <p style={{ ...sans, fontSize: "10px", letterSpacing: "0.14em", color: "#9ca3af" }}>
               #{room.number}
             </p>
           </div>
 
-          {/* Prix */}
           <div className="text-right flex-shrink-0">
             {verifiedPromo ? (
               <>
@@ -375,6 +368,7 @@ const RoomCard = ({ room }) => {
 
         {/* ── Boutons d'action ── */}
         <div className="flex gap-2">
+
           {/* Bouton code promo */}
           {hasActivePromos && (
             <button
@@ -384,7 +378,7 @@ const RoomCard = ({ room }) => {
                 if (showPromoInput) resetPromoCode()
               }}
               style={{ ...sans, fontSize: "10px", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" }}
-              className={`flex-1 py-2.5 px-3 rounded-xl transition-all duration-200 ${
+              className={`flex-none py-2.5 px-3 rounded-xl transition-all duration-200 ${
                 showPromoInput
                   ? 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
                   : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-sm'
@@ -394,31 +388,50 @@ const RoomCard = ({ room }) => {
             </button>
           )}
 
-          {/* Bouton réserver/WhatsApp — workflow basculable */}
-          <button
-            onClick={handleReservationClick}
-            disabled={room.status !== 'disponible'}
-            style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
-            className={`${hasActivePromos ? 'flex-1' : 'w-full'} py-2.5 px-4 rounded-xl
-              transition-all duration-200 flex items-center justify-center gap-2
-              ${room.status === 'disponible'
-                ? TEMPORARY_WHATSAPP_BOOKING
+          {/* ✅ Bouton WhatsApp — conservé intact, toujours visible si TEMPORARY_WHATSAPP_BOOKING */}
+          {TEMPORARY_WHATSAPP_BOOKING && (
+            <button
+              onClick={handleReservationClick}
+              disabled={room.status !== 'disponible'}
+              title="Réserver via WhatsApp"
+              style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
+              className={`flex-1 py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5
+                ${room.status === 'disponible'
                   ? 'bg-gradient-to-br from-emerald-500 to-green-700 text-white hover:from-emerald-600 hover:to-green-800 shadow-sm hover:shadow-md'
-                  : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+            >
+              {room.status === 'disponible' ? (
+                <>
+                  <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>WhatsApp</span>
+                </>
+              ) : (
+                <span>Indisponible</span>
+              )}
+            </button>
+          )}
+
+          {/* ✅ NOUVEAU : Bouton paiement en ligne CyberSource */}
+          <button
+            onClick={handleOnlinePaymentClick}
+            disabled={room.status !== 'disponible'}
+            title="Payer en ligne par carte bancaire"
+            style={{ ...sans, fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase" }}
+            className={`flex-1 py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5
+              ${room.status === 'disponible'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md'
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-            title={TEMPORARY_WHATSAPP_BOOKING && room.status === 'disponible' ? "Réservation temporaire via WhatsApp" : ""}
           >
-            {room.status === 'disponible' && TEMPORARY_WHATSAPP_BOOKING ? (
+            {room.status === 'disponible' ? (
               <>
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp</span>
+                <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Payer</span>
               </>
-            ) : room.status === 'disponible' ? (
-              'Réserver'
             ) : (
-              'Indisponible'
+              <span>Indisponible</span>
             )}
           </button>
+
         </div>
 
         {/* Prix final si promo */}
@@ -435,6 +448,7 @@ const RoomCard = ({ room }) => {
             </p>
           </div>
         )}
+
       </div>
     </div>
   )
