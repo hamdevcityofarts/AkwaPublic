@@ -191,24 +191,25 @@ const Section3Content = () => (<div className="space-y-4"><p className="font-med
 
 const Section4Content = () => (
   <div className="space-y-4">
-    <h3 className="text-lg font-bold text-amber-800">4.1 Utilisation de la chambre</h3>
-    <p>Le Client s'engage à utiliser la chambre et les équipements de manière raisonnable.</p>
+    <h3 className="text-base sm:text-lg font-bold text-amber-800">4.1 Utilisation de la chambre</h3>
+    <p className="text-sm sm:text-base">Le Client s'engage à utiliser la chambre et les équipements de manière raisonnable.</p>
 
-    <h3 className="text-lg font-bold text-amber-800">4.2 Dégradations</h3>
-    <p>Le Client est responsable de toutes dégradations causées. Refacturation selon barème annexé dans un délai de 48h.</p>
+    <h3 className="text-base sm:text-lg font-bold text-amber-800">4.2 Dégradations</h3>
+    <p className="text-sm sm:text-base">Le Client est responsable de toutes dégradations causées. Refacturation selon barème annexé dans un délai de 48h.</p>
 
     {/* Encadré important - Hôtel non-fumeur */}
-    <div className="bg-red-50 p-4 rounded-xl border border-red-200">
-      <p className="font-medium text-red-800">
+    <div className="bg-red-50 p-3 sm:p-4 rounded-xl border border-red-200">
+      <p className="text-sm sm:text-base font-medium text-red-800">
         Important : L'hôtel est non-fumeur. Fumer dans la chambre entraînera une facturation de <strong>60 000 F CFA</strong> correspondant au traitement spécifique de la chambre et au manque à gagner dû à l'impossibilité de la louer la nuit suivante.
       </p>
     </div>
 
     {/* Barème des dégradations */}
-    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-      <h4 className="font-bold text-amber-800 mb-3">Barème des dégradations et tarifs applicables</h4>
+    <div className="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-200">
+      <h4 className="text-sm sm:text-base font-bold text-amber-800 mb-3">Barème des dégradations et tarifs applicables</h4>
       
-      <div className="overflow-x-auto">
+      {/* Version tableau pour grands écrans */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-amber-100">
@@ -233,10 +234,34 @@ const Section4Content = () => (
         </table>
       </div>
 
+      {/* Version cartes pour mobiles */}
+      <div className="sm:hidden space-y-2">
+        <div className="bg-white p-3 rounded-lg border border-gray-200">
+          <p className="font-medium text-xs text-gray-500 mb-1">Dégradation constatée</p>
+          <p className="font-semibold text-sm">Client ayant fumé dans sa chambre</p>
+          <p className="font-medium text-xs text-gray-500 mt-2">Tarif applicable</p>
+          <p className="text-sm">60 000 F CFA (traitement spécifique + manque à gagner)</p>
+        </div>
+        <div className="bg-white p-3 rounded-lg border border-gray-200">
+          <p className="font-medium text-xs text-gray-500 mb-1">Dégradation constatée</p>
+          <p className="font-semibold text-sm">Chambre anormalement sale</p>
+          <p className="font-medium text-xs text-gray-500 mt-2">Tarif applicable</p>
+          <p className="text-sm">20 000 F CFA (coût de nettoyage supplémentaire)</p>
+        </div>
+        <div className="bg-white p-3 rounded-lg border border-gray-200">
+          <p className="font-medium text-xs text-gray-500 mb-1">Dégradation constatée</p>
+          <p className="font-semibold text-sm">Équipement fortement dégradé</p>
+          <p className="font-medium text-xs text-gray-500 mt-2">Tarif applicable</p>
+          <p className="text-sm">Coût du remplacement à neuf (hors frais de transport)</p>
+        </div>
+      </div>
+
       {/* Liste des équipements et leurs tarifs */}
-      <div className="mt-3">
-        <h5 className="font-semibold text-amber-800 mb-2">Tarifs des équipements (remplacement à neuf)</h5>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 text-sm">
+      <div className="mt-4">
+        <h5 className="text-sm sm:text-base font-semibold text-amber-800 mb-2">Tarifs des équipements (remplacement à neuf)</h5>
+        
+        {/* Grille responsive */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2 text-xs sm:text-sm">
           {[
             ["ALÈSE MATELAS 160X200", "10 000 F CFA"],
             ["ALÈSE OREILLER 50X75", "3 500 F CFA"],
@@ -270,20 +295,25 @@ const Section4Content = () => (
             ["PORTE BAGAGE", "55 000 F CFA"],
             ["MIROIR", "55 000 F CFA"],
           ].map(([item, price]) => (
-            <div key={item} className="flex justify-between border-b border-gray-100 py-1 px-1">
-              <span className="text-gray-700">{item}</span>
-              <span className="font-medium text-amber-700">{price}</span>
+            <div 
+              key={item} 
+              className="flex flex-col xs:flex-row justify-between items-start xs:items-center border-b border-gray-100 py-2 px-1 sm:px-2 hover:bg-gray-100 transition-colors rounded"
+            >
+              <span className="text-gray-700 text-xs sm:text-sm break-words pr-1">{item}</span>
+              <span className="font-medium text-amber-700 text-xs sm:text-sm whitespace-nowrap mt-1 xs:mt-0">
+                {price}
+              </span>
             </div>
           ))}
         </div>
       </div>
     </div>
 
-    <h3 className="text-lg font-bold text-amber-800">4.8 Heure d'arrivée</h3>
-    <p>Les chambres peuvent être occupées à compter de 14h00.</p>
+    <h3 className="text-base sm:text-lg font-bold text-amber-800">4.8 Heure d'arrivée</h3>
+    <p className="text-sm sm:text-base">Les chambres peuvent être occupées à compter de 14h00.</p>
 
-    <h3 className="text-lg font-bold text-amber-800">4.9 Heure de départ</h3>
-    <p>Les chambres doivent être libérées avant 12h00.</p>
+    <h3 className="text-base sm:text-lg font-bold text-amber-800">4.9 Heure de départ</h3>
+    <p className="text-sm sm:text-base">Les chambres doivent être libérées avant 12h00.</p>
   </div>
 );
 
