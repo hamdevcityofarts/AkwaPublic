@@ -186,8 +186,108 @@ const Section = ({ id, title, isOpen, onToggle, children }) => {
 // ── Contenu sections (identique à l'original — aucun changement de contenu) ──
 const Section1Content = () => (<div className="space-y-4"><p>Les relations entre GRAND HOTEL ADAMAOUA et le Client sont régies par les Conditions Générales, complétées par leurs annexes, ainsi que par le récapitulatif de réservation.</p><div className="bg-amber-50 p-5 rounded-xl border border-amber-200"><p className="font-semibold text-amber-900 mb-2">En cas de contradiction, l'ordre de préséance sera le suivant :</p><ol className="space-y-2 text-gray-700"><li className="flex items-start"><span className="font-bold text-amber-700 mr-2">(i)</span><span><strong>les Conditions Générales</strong></span></li><li className="flex items-start"><span className="font-bold text-amber-700 mr-2">(ii)</span><span><strong>le récapitulatif de réservation</strong></span></li><li className="flex items-start"><span className="font-bold text-amber-700 mr-2">(iii)</span><span><strong>les annexes aux Conditions Générales</strong></span></li></ol></div></div>);
 const Section2Content = () => (<p>La réservation d'une chambre auprès de GRAND HOTEL ADAMAOUA est réservée aux personnes physiques majeures et juridiquement capables.</p>);
+
 const Section3Content = () => (<div className="space-y-4"><p className="font-medium">La réservation peut être effectuée selon les modalités suivantes :</p>{[{h:"3.1 Réservation sur le Site Internet",p:"Le Client choisit l'hôtel, les dates, le type de chambre et valide son choix après avoir pris connaissance des conditions."},{h:"3.2 Réservation pour les groupes",p:"Pour plus de 9 chambres, le Client doit contacter l'hôtel par mail ou téléphone."},{h:"3.3 Réservation par téléphone",p:"Le Client appelle directement le numéro indiqué sur le site et reçoit un email de confirmation."},{h:"3.4 Réservation par courrier électronique",p:"Le Client envoie sa demande par email et valide l'offre par retour de mail."},{h:"3.5 Durée minimale",p:"Une durée minimale peut être exigée selon les périodes. Informations disponibles par téléphone."},{h:"3.6 Caractère nominatif",p:"Toute réservation est nominative et ne peut être cédée à un tiers."}].map(({h,p})=><div key={h}><h3 className="text-lg font-bold text-amber-800 mb-2">{h}</h3><div className="bg-gray-50 p-4 rounded-xl"><p>{p}</p></div></div>)}</div>);
-const Section4Content = () => (<div className="space-y-4"><h3 className="text-lg font-bold text-amber-800">4.1 Utilisation de la chambre</h3><p>Le Client s'engage à utiliser la chambre et les équipements de manière raisonnable.</p><h3 className="text-lg font-bold text-amber-800">4.2 Dégradations</h3><p>Le Client est responsable de toutes dégradations causées. Refacturation selon barème annexé dans un délai de 48h.</p><div className="bg-red-50 p-4 rounded-xl border border-red-200"><p className="font-medium text-red-800">Important : L'hôtel est non-fumeur. Fumer entraînera une facturation de 50 000 à 75 000 FCFA.</p></div><h3 className="text-lg font-bold text-amber-800">4.8 Heure d'arrivée</h3><p>Les chambres peuvent être occupées à compter de 14h00.</p><h3 className="text-lg font-bold text-amber-800">4.9 Heure de départ</h3><p>Les chambres doivent être libérées avant 12h00.</p></div>);
+
+const Section4Content = () => (
+  <div className="space-y-4">
+    <h3 className="text-lg font-bold text-amber-800">4.1 Utilisation de la chambre</h3>
+    <p>Le Client s'engage à utiliser la chambre et les équipements de manière raisonnable.</p>
+
+    <h3 className="text-lg font-bold text-amber-800">4.2 Dégradations</h3>
+    <p>Le Client est responsable de toutes dégradations causées. Refacturation selon barème annexé dans un délai de 48h.</p>
+
+    {/* Encadré important - Hôtel non-fumeur */}
+    <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+      <p className="font-medium text-red-800">
+        Important : L'hôtel est non-fumeur. Fumer dans la chambre entraînera une facturation de <strong>60 000 F CFA</strong> correspondant au traitement spécifique de la chambre et au manque à gagner dû à l'impossibilité de la louer la nuit suivante.
+      </p>
+    </div>
+
+    {/* Barème des dégradations */}
+    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+      <h4 className="font-bold text-amber-800 mb-3">Barème des dégradations et tarifs applicables</h4>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-amber-100">
+              <th className="border border-gray-300 px-3 py-2 text-left">Dégradation constatée</th>
+              <th className="border border-gray-300 px-3 py-2 text-left">Tarif applicable / modalité de calcul</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border border-gray-300 px-3 py-2 font-medium">Client ayant fumé dans sa chambre</td>
+              <td className="border border-gray-300 px-3 py-2">60 000 F CFA (traitement spécifique + manque à gagner)</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-3 py-2 font-medium">Chambre anormalement sale</td>
+              <td className="border border-gray-300 px-3 py-2">20 000 F CFA (coût de nettoyage supplémentaire)</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-3 py-2 font-medium">Équipement fortement dégradé</td>
+              <td className="border border-gray-300 px-3 py-2">Coût du remplacement à neuf (hors frais de transport)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Liste des équipements et leurs tarifs */}
+      <div className="mt-3">
+        <h5 className="font-semibold text-amber-800 mb-2">Tarifs des équipements (remplacement à neuf)</h5>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 text-sm">
+          {[
+            ["ALÈSE MATELAS 160X200", "10 000 F CFA"],
+            ["ALÈSE OREILLER 50X75", "3 500 F CFA"],
+            ["ALÈSE OREILLER 65X65", "4 000 F CFA"],
+            ["CINTRE", "1 500 F CFA"],
+            ["COFFRE FORT", "100 000 F CFA"],
+            ["CORBEILLE PAPIER", "12 000 F CFA"],
+            ["CHAISE DE BUREAU - COL 1", "92 000 F CFA"],
+            ["MATELAS", "330 000 F CFA"],
+            ["PATER", "25 000 F CFA"],
+            ["PIEDS DE LIT", "2 500 F CFA"],
+            ["PLATEAU DE COURTOISIE", "6 000 F CFA"],
+            ["SOMMIER 160X200", "150 000 F CFA"],
+            ["TASSE A CAFE", "4 000 F CFA"],
+            ["POUBELLE", "20 000 F CFA"],
+            ["APPLIQUE SALLE DE BAIN", "20 000 F CFA"],
+            ["CONFECTION - RIDEAUX", "80 000 F CFA"],
+            ["CONFECTION - VOILAGE", "35 000 F CFA"],
+            ["TISSUS - RIDEAUX - COL 1", "22 000 F CFA"],
+            ["TISSUS - RIDEAUX - COL 2", "22 000 F CFA"],
+            ["TISSUS - VOILAGE", "11 000 F CFA"],
+            ["TRINGLE - RIDEAUX", "98 000 F CFA"],
+            ["TV", "250 000 F CFA"],
+            ["BUREAU", "100 000 F CFA"],
+            ["ETAGÈRE", "150 000 F CFA"],
+            ["PLACARD/DRESSING", "155 000 F CFA"],
+            ["TETE DE LIT (PARTIE HAUTE)", "175 000 F CFA"],
+            ["TETE DE LIT (PARTIE BASSE)", "55 000 F CFA"],
+            ["TABLE DE CHEVET", "70 000 F CFA"],
+            ["PORTE SERVIETTE", "40 000 F CFA"],
+            ["PORTE BAGAGE", "55 000 F CFA"],
+            ["MIROIR", "55 000 F CFA"],
+          ].map(([item, price]) => (
+            <div key={item} className="flex justify-between border-b border-gray-100 py-1 px-1">
+              <span className="text-gray-700">{item}</span>
+              <span className="font-medium text-amber-700">{price}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <h3 className="text-lg font-bold text-amber-800">4.8 Heure d'arrivée</h3>
+    <p>Les chambres peuvent être occupées à compter de 14h00.</p>
+
+    <h3 className="text-lg font-bold text-amber-800">4.9 Heure de départ</h3>
+    <p>Les chambres doivent être libérées avant 12h00.</p>
+  </div>
+);
+
+
 const Section5Content = () => (<p>Via son compte Club, le Client peut modifier ses informations, accéder à ses réservations et bénéficier d'avantages commerciaux.</p>);
 const Section6Content = () => (<div className="space-y-3"><p><strong>Tarifs :</strong> Exprimés en Francs CFA, TVA (19,25%) et taxe touristique (1,5%) incluses.</p><p><strong>Paiement :</strong> Prépaiement pour tarifs non remboursables ; paiement à l'arrivée pour tarifs flexibles.</p></div>);
 const Section7Content = () => (<div className="space-y-3"><p><strong>Tarifs flexibles :</strong> Annulation possible jusqu'à 18h le jour d'arrivée sans frais. Après ce délai, première nuit facturée.</p><p><strong>No-show :</strong> Selon le type de tarif, facturation possible de la première nuit.</p></div>);
